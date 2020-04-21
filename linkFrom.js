@@ -11,9 +11,11 @@ var linkFrom = {
 
         var centerLink = Game.getObjectById(Memory.rooms[link.room.name].CenterLinkID);
         var controllerLink = Game.getObjectById(Memory.rooms[link.room.name].ControllerLinkID);
-        if(controllerLink && controllerLink.store.getFreeCapacity(RESOURCE_ENERGY) >= 400){
-            link.transferEnergy(controllerLink);
-            return;
+        if(controllerLink && controllerLink.store.getFreeCapacity(RESOURCE_ENERGY) >= 200){
+            if(link.transferEnergy(controllerLink) == OK){
+                return;
+            }
+            
         }
         if(centerLink && centerLink.store.getFreeCapacity(RESOURCE_ENERGY) >= 400){
             link.transferEnergy(centerLink);

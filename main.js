@@ -70,6 +70,35 @@ require('超级移动优化');
 global.detail = function(resourceType){
     console.log(JSON.stringify(COMMODITIES[resourceType]));
 }
+
+global.groups = function(){
+    var GroupIDs = Object.keys(Memory.groups);
+    Memory.groupTypes = {};
+    for (var i=0; i<GroupIDs.length;i++) {
+        var GroupID = GroupIDs[i];
+        var groupPlan = Memory.groups[GroupID];
+        if (!Memory.groupTypes[groupPlan.groupType]){
+            Memory.groupTypes[groupPlan.groupType] = [GroupID];
+        }else{
+            Memory.groupTypes[groupPlan.groupType].push(GroupID);
+        }
+        console.log(GroupID+":"+groupPlan.groupType);
+    }
+    
+}
+
+global.scan = function(resourceType){
+    for (const roomName in Game.rooms) {
+        var room = Game.rooms[roomName];
+        if (room.controller && room.controller.my){
+            console.log(roomName+":"+room.getStore(resourceType));
+        }
+        // if(room.controller.my){
+            
+        // }
+    }
+}
+
 module.exports.loop = function () {
 
     require("prototype.Room").load();
@@ -227,7 +256,7 @@ module.exports.loop = function () {
         for (var j = 0; j < groupPlan.roles.length; j++) {
             var role = groupPlan.roles[j];
             var roleBody = groupPlan.roleBody[j];
-            var newName = role + Game.time;
+            var newName = role + Game.time +"_"+i+"_"+j;
             var spawnObj = getSpawn(groupPlan.roomName,roleBody);
             if (!spawnObj){
                 continue;
