@@ -1,5 +1,8 @@
 var planCenter = {
     update: function() {
+        if (Game.time % 23 == 0){
+            var cpuStart = Game.cpu.getUsed();
+        }
         const rooms = Object.keys(Game.rooms);
         if (!Memory.rooms){
             return;
@@ -64,7 +67,7 @@ var planCenter = {
                     Game.rooms[room.roomName].addCenterTask(taskName,RESOURCE_ENERGY,20000 - terminal.store[RESOURCE_ENERGY],groupPlan.StorageID,groupPlan.TerminalID);
                 }
                 var taskName = "energy_T_S";
-                if ((!groupPlan.tasks[taskName]) && terminal.store[RESOURCE_ENERGY] > 50000 && storage.store[RESOURCE_ENERGY] < 200000){
+                if ((!groupPlan.tasks[taskName]) && terminal.store[RESOURCE_ENERGY] > 50000 && storage.store[RESOURCE_ENERGY] < 300000){
                     
                     Game.rooms[room.roomName].addCenterTask(taskName,RESOURCE_ENERGY,terminal.store[RESOURCE_ENERGY] - 20000,groupPlan.TerminalID,groupPlan.StorageID);
                 }
@@ -128,19 +131,20 @@ var planCenter = {
                         roomObj.prepareOrder("battery",50,"delete","addFactoryOrder,battery,50,"+taskName);
                     }
                     if (factory.store["battery"] > 0){
+                        roomObj.clearFactory();
                         roomObj.transfer("F","T",factory.store["battery"],"battery");
                     }
-                    roomObj.clearFactory();
+                    
                 }
 
                 if (Game.time % 617 == 0 && Memory.factory[room.roomName].waiting.length == 0 && !Memory.factory[room.roomName].working){
                     console.log("check room "+room.roomName);
                     var taskName = "decompose_battery";
                     if (roomObj.getStore("battery") > 0 && !Memory.factory[room.roomName].orders[taskName] && storage.store["energy"] < 400000){
-                        
+                        roomObj.clearFactory();
                         roomObj.prepareAndProduce("energy",60);
                     }
-                    roomObj.clearFactory();
+                    
                 }
 
 
@@ -182,6 +186,10 @@ var planCenter = {
             }else{
                 continue;
             }
+        }
+        if (Game.time % 23 == 0){
+            var cpuEnd = Game.cpu.getUsed();
+            Memory.stats.cpu.center = cpuEnd - cpuStart;
         }
     }
 }

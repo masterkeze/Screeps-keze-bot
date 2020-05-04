@@ -1,21 +1,44 @@
 var marketMod = {
     run: function() {
-
+        if (Game.time % 23 == 0){
+            var cpuStart = Game.cpu.getUsed();
+        }
+        
         // Game.market.createOrder({
         //     type: ORDER_SELL,
-        //     resourceType: RESOURCE_ZYNTHIUM,
-        //     price: 0.065,
+        //     resourceType: "X",
+        //     price: 0.153,
         //     totalAmount: 50000,
-        //     roomName: "W26S23"   
+        //     roomName: "W31S23"   
+        // });
+
+        // Game.market.createOrder({
+        //     type: ORDER_BUY,
+        //     resourceType: "ghodium_melt",
+        //     price: 5.0,
+        //     totalAmount: 5100,
+        //     roomName: "W29S22"   
+        // });
+        
+
+        // Game.market.createOrder({
+        //     type: ORDER_BUY,
+        //     resourceType: RESOURCE_ZYNTHIUM_BAR,
+        //     price: 0.33,
+        //     totalAmount: 50000,
+        //     roomName: "W28S22"   
+        // });
+
+        // Game.market.createOrder({
+        //     type: ORDER_BUY,
+        //     resourceType: RESOURCE_UTRIUM_BAR,
+        //     price: 0.33,
+        //     totalAmount: 50000,
+        //     roomName: "W28S22"   
         // });
 
         const rooms = Object.keys(Game.rooms);
-        var orders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: RESOURCE_POWER});
-        orders.sort(function (a, b) {
-            return a.price - b.price;
-        });
         //console.log(JSON.stringify(orders));
-        var orders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: RESOURCE_ENERGY});
         var powerOrders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: RESOURCE_POWER}).filter(order => order.amount > 0).sort(function(a, b) {
             return a.price - b.price;
         });
@@ -25,11 +48,11 @@ var marketMod = {
                 var target = rooms[i];
                 if (rooms[i] == "W29S22" || rooms[i] == "W28S22"|| rooms[i] == "W26S23"){
                     //console.log(JSON.stringify(powerOrders));
-                    if (powerOrders.length > 0){
+                    if (powerOrders.length > 0 && powerOrders[0].price <= 4.75){
                         var toDeal = powerOrders[0];
-                        if (toDeal.price < 4.2){
+                        if (toDeal.price < 4.55){
                             Game.market.deal(toDeal.id,5000,rooms[i]);
-                        }else if (toDeal.price < 4.45 && Game.rooms[target].terminal.store[RESOURCE_POWER] < 2000){
+                        }else if (toDeal.price < 4.75 && Game.rooms[target].terminal.store[RESOURCE_POWER] < 2000){
                             Game.market.deal(toDeal.id,toDeal.amount,rooms[i]);
                         }
                     }
@@ -42,8 +65,22 @@ var marketMod = {
                         });
                         if (frameOrders.length > 0){
                             var toDeal = frameOrders[0];
-                            if (toDeal.price >= 12000){
+                            if (toDeal.price >= 13000){
                                 Game.market.deal(toDeal.id,Math.min(toDeal.amount,Game.rooms[target].terminal.store["frame"]),target);
+                            }
+                        }
+                    }
+                }
+
+                if (target == "W28S22"){
+                    if (Game.rooms[target].terminal.store["composite"] >= 1000){
+                        var compositeOrders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: "composite"}).filter(order => order.amount > 0).sort(function(a, b) {
+                            return b.price - a.price ;
+                        });
+                        if (compositeOrders.length > 0){
+                            var toDeal = compositeOrders[0];
+                            if (toDeal.price >= 4.5){
+                                Game.market.deal(toDeal.id,Math.min(toDeal.amount,Game.rooms[target].terminal.store["composite"]),target);
                             }
                         }
                     }
@@ -76,7 +113,11 @@ var marketMod = {
             }
         }
         
-
+        if (Game.time % 23 == 0){
+            var cpuEnd = Game.cpu.getUsed();
+            Memory.stats.cpu.market = cpuEnd - cpuStart;
+        }
+        
         
 	}
 };

@@ -253,7 +253,9 @@ var prototypes = {
                 return structure.structureType == STRUCTURE_STORAGE || structure.structureType == STRUCTURE_TERMINAL || structure.structureType == STRUCTURE_FACTORY
             }});
             var creeps = this.find(FIND_MY_CREEPS);
+            var powercreeps = this.find(FIND_MY_POWER_CREEPS);
             var stores = structures.concat(creeps);
+            stores = stores.concat(powercreeps);
             const reducer = (accumulator, currentValue) => accumulator + parseInt(currentValue.store[resource]);
             return stores.reduce(reducer,0);
         }
@@ -280,6 +282,46 @@ var prototypes = {
             return 0;
         }
 
+        Room.prototype.fillNuke = function(){
+            var room = Memory.rooms[this.name];
+            if (!room.NukerID || !room.StorageID) {
+                console.log("No nuke in room "+this.name);
+                return -1;
+            }
+            const storage = Game.getObjectById(room.StorageID);
+            const terminal = Game.getObjectById(room.TerminalID);
+            const nuker = Game.getObjectById(room.NukerID);
+            var g_required = nuker.store.getCapacity(RESOURCE_GHODIUM) - nuker.store[RESOURCE_GHODIUM];
+
+            if(terminal && terminal.store[RESOURCE_GHODIUM] > 0 && g_required > 0){
+                this.addCenterTask("fill_nuke_g",RESOURCE_GHODIUM,Math.min(terminal.store[RESOURCE_GHODIUM],g_required),terminal.id,nuker.id);
+                g_required -= Math.min(terminal.store[RESOURCE_GHODIUM],g_required);
+            }
+            if(storage.store[RESOURCE_GHODIUM] > 0 && g_required > 0){
+                this.addCenterTask("fill_nuke_g",RESOURCE_GHODIUM,Math.min(storage.store[RESOURCE_GHODIUM],g_required),storage.id,nuker.id);
+                g_required -= Math.min(storage.store[RESOURCE_GHODIUM],g_required);
+            }
+            if (g_required > 0){
+                console.log(this.name + " needs G:"+g_required);
+            }
+
+            var e_required = nuker.store.getFreeCapacity("energy");
+
+            if(storage.store["energy"] > 0 && e_required > 0){
+                this.addCenterTask("fill_nuke_e","energy",Math.min(storage.store["energy"],e_required),storage.id,nuker.id);
+                e_required -= Math.min(storage.store["energy"],e_required);
+            }
+
+            if(terminal && terminal.store["energy"] > 0 && e_required > 0){
+                this.addCenterTask("fill_nuke_e","energy",Math.min(terminal.store["energy"],e_required),terminal.id,nuker.id);
+                e_required -= Math.min(terminal.store["energy"],e_required);
+            }
+            if (e_required > 0){
+                console.log(this.name + " needs energy:"+e_required);
+            }
+            return 0;
+        }
+
         Room.prototype.addStealPlan = function(stealFlag){
             var planName = stealFlag;
             var room = Memory.rooms[this.name];
@@ -301,6 +343,14 @@ var prototypes = {
         }
 
         Room.prototype.costAnalysis = function(product,amount){
+            var orders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: product}).filter(order => order.amount > 0).sort(function(a, b) {
+                return b.price - a.price;
+            });;
+            if (orders.length > 0){
+                console.log(product+":\t"+COMMODITIES[product].amount*amount+"\t"+orders[0].price+"\t"+COMMODITIES[product].amount*amount*orders[0].price);
+            }else{
+                console.log(product+":\t"+COMMODITIES[product].amount*amount);
+            }
             var decomposed = this.decompose(product,amount);
             for (const key of Object.keys(decomposed)) {
                 var orders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: key}).filter(order => order.amount > 0).sort(function(a, b) {
@@ -335,12 +385,29 @@ var prototypes = {
             return -1;
         }
 
+        Room.prototype.stopFactory = function(){
+            const room = this.name;
+            if (Memory.factory[room]){
+                var config = Memory.factory[room];
+                config.orders = {};
+                config.waiting = [];
+                config.working = "";
+                // if (config.working){
+                //     if(config.orders[config.working]){
+                //         delete config.orders[config.working];
+                //     }
+                //     config.working = "";
+                // }
+                this.clearFactory();
+            }
+            
+        }
 
         Room.prototype.decompose = function(product,amount,level){
             const noDecom = [RESOURCE_ENERGY,RESOURCE_POWER,RESOURCE_HYDROGEN,RESOURCE_OXYGEN,RESOURCE_UTRIUM,
                 RESOURCE_KEANIUM,RESOURCE_LEMERGIUM,RESOURCE_ZYNTHIUM,RESOURCE_CATALYST,RESOURCE_GHODIUM,
                 RESOURCE_SILICON,RESOURCE_METAL,RESOURCE_BIOMASS,RESOURCE_MIST,RESOURCE_ZYNTHIUM_BAR,
-                RESOURCE_UTRIUM_BAR,RESOURCE_OXIDANT,RESOURCE_REDUCTANT,RESOURCE_ALLOY];
+                RESOURCE_UTRIUM_BAR,RESOURCE_OXIDANT,RESOURCE_REDUCTANT,RESOURCE_LEMERGIUM_BAR,RESOURCE_KEANIUM_BAR,RESOURCE_GHODIUM_MELT,RESOURCE_PURIFIER,RESOURCE_ALLOY];
             const details = COMMODITIES[product];
             if (noDecom.indexOf(product) >= 0 || (details.level && details.level <= level)){
                 var result = {};

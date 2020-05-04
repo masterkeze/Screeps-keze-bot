@@ -101,6 +101,10 @@ global.scan = function(resourceType){
 
 module.exports.loop = function () {
 
+    if (Game.time % 23 == 0){
+        var p0 = Game.cpu.getUsed();
+    }
+
     require("prototype.Room").load();
     const statistics = require("statistics");
     const towerExp = require("tower");
@@ -115,12 +119,24 @@ module.exports.loop = function () {
     powerSpawnExp.run();
     factoryExp.run();
     
-
-    Memory.towers.forEach(tower => {
-        towerExp.run(Game.getObjectById(tower));
-    });
+    if (Game.time % 23 == 0){
+        var cpuStart = Game.cpu.getUsed();
+    }
+    towerExp.run();
+    // Memory.towers.forEach(tower => {
+    //     towerExp.run(Game.getObjectById(tower));
+    // });
+    if (Game.time % 23 == 0){
+        var cpuEnd = Game.cpu.getUsed();
+        Memory.stats.cpu.towers = cpuEnd - cpuStart;
+    }
     require("terminal").run();
-
+    require('plan.center').update();
+    require('plan.mineral').update();
+    require('plan.upgrade').update();
+    require('plan.build').update();
+    require('plan.distribute').update();
+    //require('plan.source').update();
     // var GroupID = "r_build_5bbcab489099fc012e63336c";
     // if (Memory.groups[GroupID]){
     //     delete Memory.groups[GroupID];
@@ -132,31 +148,30 @@ module.exports.loop = function () {
     //     //initPlan6(GroupID,"5e6f266df748461ba6ab32c9","5bbcab489099fc012e63336b");
     // }
 
-    //updateStructures();
-    // if (Game.time % 5000 == 0){
-    //     updateStructures();
-    // }
-    // if (Game.time % 100 == 0){
-    //     Game.market.createOrder({
-    //         type: ORDER_BUY,
-    //         resourceType: RESOURCE_ENERGY,
-    //         price: 0.1,
-    //         totalAmount: 1,
-    //         roomName: "W29S22"   
-    //     });
-    // }
-
     var roleContainer = [];
-    var roles = ['pureharvester','picker','distributer','repairer','upgrader','builder','filler','harvester','transferer','upgradeSupplier','attacker','r_harvester','r_transferer','claimer','r_builder','primitive','deposit','cmanager','stealer'];
+    var roles = ['distributer','repairer','upgrader','builder','harvester','transferer','upgradeSupplier','attacker','r_harvester','r_transferer','claimer','r_builder','primitive','deposit','cmanager','stealer'];
     for (var i=0; i<roles.length;i++) {
         var role = roles[i];
         roleContainer.push(require('role.'+role));
     }
 
-    var plans = ['distribute','primitive','source','build','upgrade','mineral','center','deposit','steal'];
-    for (var i=0; i<plans.length;i++){
-        var plan = plans[i];
-        require('plan.'+plan).update();
+    if (Game.time % 23 == 0){
+        console.log("ha!");
+        var p1 = Game.cpu.getUsed();
+        Memory.stats.cpu.prepare = p1 - p0;
+    }
+
+    // var plans = ['distribute','primitive','source','build','upgrade','mineral','center','deposit','steal'];
+    // for (var i=0; i<plans.length;i++){
+    //     var plan = plans[i];
+    //     require('plan.'+plan).update();
+    // }
+    
+    for(var name in Memory.creeps) {
+        if(!Game.creeps[name]) {
+            delete Memory.creeps[name];
+            console.log('Clearing non-existing creep memory:', name);
+        }
     }
 
     for(var name in Game.creeps) {
@@ -170,6 +185,11 @@ module.exports.loop = function () {
             //console.log(creepRole);
             roleContainer[roles.indexOf(creepRole)].run(creep);
         }
+    }
+
+    if (Game.time % 23 == 0){
+        var p2 = Game.cpu.getUsed();
+        Memory.stats.cpu.creeps = p2 - p1;
     }
     
     // run links
@@ -185,14 +205,13 @@ module.exports.loop = function () {
         }
     }
 
-    //console.log(p1.ticksToLive);
-    for(var name in Memory.creeps) {
-        
-        if(!Game.creeps[name]) {
-            delete Memory.creeps[name];
-            console.log('Clearing non-existing creep memory:', name);
-        }
+    if (Game.time % 23 == 0){
+        var p3 = Game.cpu.getUsed();
+        Memory.stats.cpu.links = p3 - p2;
     }
+
+    //console.log(p1.ticksToLive);
+
 
     if (!Memory.groups){
         Memory.groups = Object();
@@ -200,33 +219,18 @@ module.exports.loop = function () {
     
     // maintain creeps in groups
     var GroupIDs = Object.keys(Memory.groups);
-    var spawningFlag = false;
     for (var i=0; i<GroupIDs.length;i++) {
         var GroupID = GroupIDs[i];
-        //console.log("maintaining "+GroupID);
-        // clear useless group
-        if(!Game.getObjectById(GroupID)){
-            //console.log("clearing group memory "+GroupID);
-            //delete Memory.groups[GroupID];
-            //continue;
-        }
+
         // clear non-existing creep
         var groupPlan = Memory.groups[GroupID];
         if (groupPlan.usingPC) continue;
         while (groupPlan.creeps.length > 0 && !Game.getObjectById(groupPlan.creeps[0])){
             groupPlan.creeps = groupPlan.creeps.slice(1);
         }
-        //console.log("clear memory OK ");
+
         if(groupPlan.roles.length == 0) continue;
-        // var spawnObj = Game.getObjectById(groupPlan.SpawnID);
-        
-        // //console.log(result);
-        // if(!spawnObj || spawningFlag ){ 
-        //     //console.log(groupPlan.SpawnID+" not able to spawn");
-        //     continue;
-        // }
-        //console.log("ready to spawn");
-        // get statistic data
+
         var currentCount = [];
         var currentLiveTick = [];
         var roles = groupPlan.roles;
@@ -247,12 +251,7 @@ module.exports.loop = function () {
                 currentLiveTick[roleIndex] = Math.min(currentLiveTick[roleIndex],creep.ticksToLive);
             }
         }
-        // console.log(currentCount);
-        // console.log(currentLiveTick);
-        // creep generation
-        // if (groupPlan.groupType !="DistributeTeam"){
-        //     continue;
-        // }
+
         for (var j = 0; j < groupPlan.roles.length; j++) {
             var role = groupPlan.roles[j];
             var roleBody = groupPlan.roleBody[j];
@@ -267,6 +266,11 @@ module.exports.loop = function () {
             }
         }
     }
+
+    if (Game.time % 23 == 0){
+        var p4 = Game.cpu.getUsed();
+        Memory.stats.cpu.spawns = p4 - p3;
+    }
+
     require("status").run();
-    //console.log(Game.cpu.getUsed())
 }

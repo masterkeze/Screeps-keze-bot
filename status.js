@@ -15,9 +15,28 @@ module.exports = {
         Memory.stats.gpl = (Game.gpl.progress / Game.gpl.progressTotal) * 100
         Memory.stats.gplLevel = Game.gpl.level
         // CPU 的当前使用量
-        Memory.stats.cpu = Game.cpu.getUsed()
+        Memory.stats.cpu.total = Game.cpu.getUsed()
         // bucket 当前剩余量
         Memory.stats.bucket = Game.cpu.bucket
         Memory.stats.credits = Game.market.credits
+        Memory.stats.creepNum = Object.keys(Game.creeps).length
+        for (const roomName in Game.rooms) {
+            var room = Game.rooms[roomName];
+            if (room.controller && room.controller.my){
+                if (!Memory.stats.storage){
+                    Memory.stats.storage = {}
+                }
+                if (room.storage){
+                    Memory.stats.storage[roomName] = room.storage.store.getUsedCapacity()
+                }
+                if (!Memory.stats.terminal){
+                    Memory.stats.terminal = {}
+                }
+                if (room.terminal){
+                    Memory.stats.terminal[roomName] = room.terminal.store.getUsedCapacity()
+                }
+
+            }
+        }
     }
 }

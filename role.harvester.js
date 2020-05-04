@@ -22,6 +22,21 @@ var roleHarvester = {
             console.log(creep.name+" is not assigned with a valid source!");
             return;
         }
+        if (!creep.memory.idleTicks){
+            if(source.energyCapacity){
+                var harvestSpeed = creep.getActiveBodyparts(WORK) * 2;
+                var generationSpeed = source.energyCapacity / 300;
+                creep.memory.idleTicks = Math.max(Math.floor(harvestSpeed/generationSpeed),1);
+            }
+        }
+        if (!creep.memory.randomIndex){
+            creep.memory.randomIndex = Game.time % creep.memory.idleTicks;
+        }
+
+        if ( source.energyCapacity && source.energyCapacity != source.energy && creep.memory.idleTicks > 1 && source.energy / source.ticksToRegeneration < source.energyCapacity / 300 && (Game.time + creep.memory.randomIndex) % creep.memory.idleTicks != 0){
+            return;
+        }
+
         var link = Game.getObjectById(groupPlan.LinkID);
         if (link){
             var container = link;

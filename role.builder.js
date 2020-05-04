@@ -1,3 +1,5 @@
+var rampartHits = 500000;
+
 var roleBuilder = {
 
     /** @param {Creep} creep **/
@@ -38,9 +40,43 @@ var roleBuilder = {
             var target = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
             if(target) {
                 if(creep.build(target) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
+                    creep.moveTo(target, {range:3,visualizePathStyle: {stroke: '#ffffff'},});
+                }
+                if (creep.store[RESOURCE_ENERGY] <= creep.getActiveBodyparts(WORK) * 5){
+                    creep.withdraw(source, RESOURCE_ENERGY)
                 }
             }else{
+                if (!creep.memory.rampartID && !creep.memory.noRampart){
+                    var ramparts = creep.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => (structure.structureType == STRUCTURE_RAMPART && structure.hits < rampartHits-50000) 
+                    });
+                    if (ramparts.length > 0){
+                        groupPlan.walling = true;
+                        creep.memory.rampartID = ramparts[0].id;
+                    }else{
+                        creep.memory.noRampart = true;
+                        groupPlan.walling = false;
+                    }
+                }
+                if (creep.memory.rampartID){
+                    const rampart = Game.getObjectById(creep.memory.rampartID);
+                    if (creep.repair(rampart) == ERR_NOT_IN_RANGE){
+                        creep.moveTo(rampart,{range:3});
+                    }
+                    if (rampart.hits > rampartHits){
+                        creep.memory.rampartID = 0;
+                        groupPlan.walling = false;
+                    }
+                }
+
+                // if (ramparts.length > 0){
+                //     groupPlan.walling = true;
+                //     if (creep.repair(ramparts[0]) == ERR_NOT_IN_RANGE){
+                //         creep.moveTo(ramparts[0]);
+                //     }
+                // }else{
+                //     groupPlan.walling = false;
+                // }
                 //creep.moveTo(Game.flags.Flag7);
             }
         }

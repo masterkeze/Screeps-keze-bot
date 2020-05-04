@@ -6,6 +6,9 @@ var sender = {
 
 var terminal = {
     run: function(){
+        if (Game.time % 23 == 0){
+            var cpuStart = Game.cpu.getUsed();
+        }
         var rooms = ["W29S22","W28S22","W26S23","W26S19","W31S23"];
         for (const roomName of rooms) {
             //console.log(roomName);
@@ -31,7 +34,7 @@ var terminal = {
             }
 
             for (const processing of senders) {
-                if (!processing.destination){
+                if (!processing.destination || !COMMODITIES[processing.resourceType]){
                     senders.shift();
                     break;
                 }
@@ -53,13 +56,14 @@ var terminal = {
                     }
                 }
                 if (terminal.store[processing.resourceType] < processing.amount){
-                    var taskName = "terminal_fill";
+                    var taskName = "terminal_fill_"+processing.resourceType;
                     if (!centerPlan.tasks[taskName]){
                         if (factory && factory.store[processing.resourceType] > 0){
                             roomObj.addCenterTask(taskName,processing.resourceType,Math.min(processing.amount-terminal.store[processing.resourceType],factory.store[processing.resourceType]),factory.id,terminal.id);
                             continue;
                         }
-                        if (storage && storage.store[processing.resourceType] >= processing.amount-terminal.store[processing.resourceType]){
+                        if (roomObj.getStore(processing.resourceType) >= processing.amount){
+                        // if (storage && storage.store[processing.resourceType] >= processing.amount-terminal.store[processing.resourceType]){
                             roomObj.addCenterTask(taskName,processing.resourceType,processing.amount-terminal.store[processing.resourceType],storage.id,terminal.id);
                         }else{
                             console.log(roomName+" send failed, lack of "+processing.resourceType);
@@ -80,6 +84,10 @@ var terminal = {
                 };
             }
 
+        }
+        if (Game.time % 23 == 0){
+            var cpuEnd = Game.cpu.getUsed();
+            Memory.stats.cpu.terminal = cpuEnd - cpuStart;
         }
     }
 };

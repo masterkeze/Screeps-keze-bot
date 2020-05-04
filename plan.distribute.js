@@ -48,7 +48,7 @@ var planDistributer = {
                 if (Memory.groups[planName].usingPC) continue;
                 Memory.groups[planName].roleLimit[0] = 1;
                 if (Game.rooms[room.roomName].energyAvailable >= 600){
-                    Memory.groups[planName].roleBody[0] = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
+                    Memory.groups[planName].roleBody[0] = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
                 }else{
                     Memory.groups[planName].roleBody[0] = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
                 }

@@ -2,6 +2,9 @@ var PCs = ["GGEZ","ZYCNB","ZOFIA"];
 var rooms = ["W29S22","W28S22","W26S23"];
 var powerSpwan = {
     run: function(){
+        if (Game.time % 23 == 0){
+            var cpuStart = Game.cpu.getUsed();
+        }
         for (let i = 0; i < rooms.length; i++) {
             var PCName = PCs[i];
             var room = Memory.rooms[rooms[i]];
@@ -34,7 +37,7 @@ var powerSpwan = {
                 continue;
             }
 
-            if (PC.ticksToLive < 50){
+            if (PC.ticksToLive < 500){
                 PC.say("renew!");
                 PC.renew(powerSpawn);
             }
@@ -47,6 +50,32 @@ var powerSpwan = {
                 }
                 continue;
             }
+
+            var workForSource = false;
+            if(PC.powers[PWR_REGEN_SOURCE]){
+                PC.memory.working = false;
+                var sources = PC.room.find(FIND_SOURCES);
+                if(sources.length > 0){
+                    for (const source of sources) {
+                        var distance = PC.pos.getRangeTo(source);
+                        if (PC.powers[PWR_REGEN_SOURCE].cooldown > distance) continue;
+                        if(!source.effects || !source.effects[0] || source.effects[0].ticksRemaining <= distance){
+                            workForSource = true;
+                            if (distance <= 3){
+                                if (PC.usePower(PWR_REGEN_SOURCE,source) != OK){
+                                    workForSource = false;
+                                }
+                            }else{
+                                PC.moveTo(source,{range:3});
+                            }
+                            break;
+                            
+                        }
+                    }
+                }
+            }
+            if (workForSource) continue;
+            //PC.memory.working = true;
             var workFlag = Game.flags["PC_"+rooms[i]];
             if (PC.memory.workAsCenter){
                 workFlag = Game.flags["center_"+rooms[i]];
@@ -223,7 +252,10 @@ var powerSpwan = {
 
             // }
         }
-
+        if (Game.time % 23 == 0){
+            var cpuEnd = Game.cpu.getUsed();
+            Memory.stats.cpu.powerSpawn = cpuEnd - cpuStart;
+        }
         
     }
 };

@@ -19,6 +19,9 @@ var statistics = {
         //console.log(JSON.stringify(rooms));
         for (var i=0; i<rooms.length;i++) {
             const room = Game.rooms[rooms[i]];
+            if(!room.controller || (room.controller && !room.controller.my) ){
+                delete Memory.rooms[room.name];
+            }
             const myStructureCount = room.find(FIND_MY_STRUCTURES).length;
             if (myStructureCount == 0){
                 continue;
@@ -150,6 +153,15 @@ var statistics = {
             }else{
                 statistics.PowerSpawnID = 0;
             }
+
+            const nukers = room.find(FIND_MY_STRUCTURES,{filter:(structure)=>{return structure.structureType == STRUCTURE_NUKER;}});
+            if(nukers.length>0){
+                const nuker = nukers[0];
+                statistics.NukerID = nuker.id;
+            }else{
+                statistics.NukerID = 0;
+            }
+
             Memory.rooms[room.name] = statistics;
             //console.log(JSON.stringify(LabIDs));
         }
