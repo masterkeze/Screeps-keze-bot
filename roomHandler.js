@@ -1,6 +1,7 @@
 /**
  * 
- * @param {string} roomName - 
+ * @param {string} roomName
+ * @returns {int}
  */
 var roomHandler = function(roomName){
     const roomObj = Game.rooms[roomName];
@@ -17,13 +18,6 @@ var roomHandler = function(roomName){
             updateStatistics(roomName);
             return -1;
         }
-        if (room.SpawnIDs){
-
-        }else{
-            // send email
-            console.log("No spawn for room "+roomName);
-            return -1;
-        }
         // task sender
         // regular check
     
@@ -32,6 +26,14 @@ var roomHandler = function(roomName){
         // task handler
         // structures
         // spawn
+        if (room.SpawnIDs){
+            runSpawn(roomName);
+        }else{
+            // send email
+            console.log("No spawn for room "+roomName);
+            return -1;
+        }
+        // powerspawn
         if (room.PowerSpawnID){
             var powerspawn = Game.getObjectById(room.PowerSpawnID);
             if (powerspawn){
@@ -58,7 +60,7 @@ var roomHandler = function(roomName){
                 runLink(linksFrom,linksTo);
             }
         }
-        // tower
+        // towers
         if (room.TowerIDs){
             var towers = [];
             for (const TowerID of room.TowerIDs) {
@@ -89,3 +91,5 @@ var roomHandler = function(roomName){
         // maybe cache some rooms
     }
 }
+
+module.exports = roomHandler;

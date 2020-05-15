@@ -96,6 +96,14 @@ var statistics = {
                     statistics.SpawnIDs.push(spawn.id);
                 }
             }
+            const extensions = room.find(FIND_MY_STRUCTURES,{filter:(structure)=>{return structure.structureType == STRUCTURE_EXTENSION;}});
+            statistics.Extensions = [];
+            if (extensions){
+                for (const extension of extensions) {
+                    statistics.Extensions.push(extension.id);
+                }
+            }
+
             const links = room.find(FIND_MY_STRUCTURES,{filter:(structure)=>{return structure.structureType == STRUCTURE_LINK;}});
             statistics.LinkIDs = [];
             statistics.LinksFrom = [];
