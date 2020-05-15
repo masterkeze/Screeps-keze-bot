@@ -49,7 +49,7 @@ var roleDistributer = {
             var targets = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
                     return ((structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN
-                        || (structure.structureType == STRUCTURE_TOWER && structure.store.getFreeCapacity(RESOURCE_ENERGY) >= 300 && structure.id != "")
+                        || (structure.structureType == STRUCTURE_TOWER && structure.store.getFreeCapacity(RESOURCE_ENERGY) >= 300 && structure.id != "5e52a4a31270172df27c1067")
                         )) 
                         && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
                 }

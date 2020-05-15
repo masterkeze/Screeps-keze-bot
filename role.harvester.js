@@ -55,6 +55,8 @@ var roleHarvester = {
                 creep.memory.harvesting = true;
                 creep.memory.dontPullMe = true;
             }
+        }else{
+            creep.memory.dontPullMe = true;
         }
         if (creep.pos.getRangeTo(container) > 1){
             creep.moveTo(container, {visualizePathStyle: {stroke: '#ffaa00'},reusePath: 5});;

@@ -47,7 +47,7 @@ function enoughForProduce(room,order){
 var factory = {
     run: function(){
         //return;
-        var rooms = ["W29S22","W28S22","W26S23","W26S19"];
+        var rooms = ["W29S22","W28S22","W26S23","W26S19","W31S23"];
         for (const roomName of rooms) {
             //console.log(roomName);
             const room = Game.rooms[roomName];
@@ -58,6 +58,9 @@ var factory = {
             }
             if (!Memory.factory){
                 Memory.factory = Object();
+            }
+            if (!Memory.factory[roomName]){
+                Memory.factory[roomName] = Object();
             }
             if (!Memory.factory[roomName].orders){
                 Memory.factory[roomName] = {
@@ -156,6 +159,7 @@ var factory = {
             }
             if (order.status = "working"){
                 var result = factory.produce(order.product);
+                //console.log("working on "+order.product);
                 if (result == OK){
                     order.amount -= 1;
                     if (order.amount <= 0){
@@ -170,7 +174,7 @@ var factory = {
                             delete config.orders[config.working];
                         }
                     }
-                    break;
+                    continue;
                 }else{
                     //console.log(JSON.stringify(details));
                     if (COMMODITIES[order.product].level){
@@ -191,7 +195,7 @@ var factory = {
                         room.handle(order.onSuspended);
                         delete config.orders[config.working];
                     }
-                    break;
+                    continue;
                 }
             }
             // check each order

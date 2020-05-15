@@ -67,7 +67,7 @@ var planCenter = {
                     Game.rooms[room.roomName].addCenterTask(taskName,RESOURCE_ENERGY,20000 - terminal.store[RESOURCE_ENERGY],groupPlan.StorageID,groupPlan.TerminalID);
                 }
                 var taskName = "energy_T_S";
-                if ((!groupPlan.tasks[taskName]) && terminal.store[RESOURCE_ENERGY] > 50000 && storage.store[RESOURCE_ENERGY] < 300000){
+                if ((!groupPlan.tasks[taskName]) && terminal.store[RESOURCE_ENERGY] > 20000 && storage.store[RESOURCE_ENERGY] < 300000){
                     
                     Game.rooms[room.roomName].addCenterTask(taskName,RESOURCE_ENERGY,terminal.store[RESOURCE_ENERGY] - 20000,groupPlan.TerminalID,groupPlan.StorageID);
                 }
@@ -137,7 +137,7 @@ var planCenter = {
                     
                 }
 
-                if (Game.time % 617 == 0 && Memory.factory[room.roomName].waiting.length == 0 && !Memory.factory[room.roomName].working){
+                if (Game.time % 317 == 0 && Memory.factory[room.roomName].waiting.length == 0 && !Memory.factory[room.roomName].working){
                     console.log("check room "+room.roomName);
                     var taskName = "decompose_battery";
                     if (roomObj.getStore("battery") > 0 && !Memory.factory[room.roomName].orders[taskName] && storage.store["energy"] < 400000){

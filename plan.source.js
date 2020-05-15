@@ -83,8 +83,11 @@ var planSource = {
                         Memory.groups[planName].LinkID = null;
                         Memory.groups[planName].roleLimit = [1,1];
                     }
-                    if (Game.rooms[room.roomName].controller.level == 8){
+                    if (Game.rooms[room.roomName].controller.level == 8 && room.roomName == "W29S22"){
                         Memory.groups[planName].roleBody[0] = [WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE];
+                        Memory.groups[planName].spawnAhead[0] = Memory.groups[planName].distance + Memory.groups[planName].roleBody[0].length * 3;
+                    }else if((Game.rooms[room.roomName].controller.level == 8){
+                        Memory.groups[planName].roleBody[0] = [WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE];
                         Memory.groups[planName].spawnAhead[0] = Memory.groups[planName].distance + Memory.groups[planName].roleBody[0].length * 3;
                     }
                     // update role body

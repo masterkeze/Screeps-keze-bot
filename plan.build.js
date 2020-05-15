@@ -60,7 +60,7 @@ var planBuilder = {
                             Memory.groups[planName].roleLimit[0] = 1;
                         }else{
                             var ramparts = Game.rooms[room.roomName].find(FIND_STRUCTURES, {
-                                filter: (structure) => (structure.structureType == STRUCTURE_RAMPART && structure.hits < 30000) 
+                                filter: (structure) => (structure.structureType == STRUCTURE_RAMPART && structure.hits < 300000) 
                             });
                             if (ramparts.length > 0){
                                 Memory.groups[planName].walling = true;

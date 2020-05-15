@@ -116,7 +116,7 @@ module.exports.loop = function () {
     //console.log('spawn uses:',(end-start));
     require("market").run();
     statistics.update();
-    powerSpawnExp.run();
+
     factoryExp.run();
     
     if (Game.time % 23 == 0){
@@ -136,6 +136,7 @@ module.exports.loop = function () {
     require('plan.upgrade').update();
     require('plan.build').update();
     require('plan.distribute').update();
+    powerSpawnExp.run();
     //require('plan.source').update();
     // var GroupID = "r_build_5bbcab489099fc012e63336c";
     // if (Memory.groups[GroupID]){
@@ -156,7 +157,7 @@ module.exports.loop = function () {
     }
 
     if (Game.time % 23 == 0){
-        console.log("ha!");
+        //console.log("ha!");
         var p1 = Game.cpu.getUsed();
         Memory.stats.cpu.prepare = p1 - p0;
     }

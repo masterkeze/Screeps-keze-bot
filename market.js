@@ -20,6 +20,13 @@ var marketMod = {
         //     roomName: "W29S22"   
         // });
         
+        // Game.market.createOrder({
+        //     type: ORDER_BUY,
+        //     resourceType: "power",
+        //     price: 4.5,
+        //     totalAmount: 100000,
+        //     roomName: "W29S22"   
+        // });
 
         // Game.market.createOrder({
         //     type: ORDER_BUY,
@@ -39,24 +46,24 @@ var marketMod = {
 
         const rooms = Object.keys(Game.rooms);
         //console.log(JSON.stringify(orders));
-        var powerOrders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: RESOURCE_POWER}).filter(order => order.amount > 0).sort(function(a, b) {
-            return a.price - b.price;
-        });
+        // var powerOrders = Game.market.getAllOrders({type: ORDER_SELL, resourceType: RESOURCE_POWER}).filter(order => order.amount > 0).sort(function(a, b) {
+        //     return a.price - b.price;
+        // });
         
         for (var i=0; i<rooms.length;i++) {
             if (Memory.rooms[rooms[i]] && Memory.rooms[rooms[i]].TerminalID){
                 var target = rooms[i];
-                if (rooms[i] == "W29S22" || rooms[i] == "W28S22"|| rooms[i] == "W26S23"){
-                    //console.log(JSON.stringify(powerOrders));
-                    if (powerOrders.length > 0 && powerOrders[0].price <= 4.75){
-                        var toDeal = powerOrders[0];
-                        if (toDeal.price < 4.55){
-                            Game.market.deal(toDeal.id,5000,rooms[i]);
-                        }else if (toDeal.price < 4.75 && Game.rooms[target].terminal.store[RESOURCE_POWER] < 2000){
-                            Game.market.deal(toDeal.id,toDeal.amount,rooms[i]);
-                        }
-                    }
-                }
+                // if (rooms[i] == "W29S22" || rooms[i] == "W28S22"|| rooms[i] == "W26S23"){
+                //     //console.log(JSON.stringify(powerOrders));
+                //     if (powerOrders.length > 0 && powerOrders[0].price <= 4.75){
+                //         var toDeal = powerOrders[0];
+                //         if (toDeal.price < 4.55){
+                //             Game.market.deal(toDeal.id,5000,rooms[i]);
+                //         }else if (toDeal.price < 4.75 && Game.rooms[target].terminal.store[RESOURCE_POWER] < 2000){
+                //             Game.market.deal(toDeal.id,toDeal.amount,rooms[i]);
+                //         }
+                //     }
+                // }
                 if (target == "W29S22"){
 
                     if (Game.rooms[target].terminal.store["frame"] >= 1){
@@ -65,7 +72,7 @@ var marketMod = {
                         });
                         if (frameOrders.length > 0){
                             var toDeal = frameOrders[0];
-                            if (toDeal.price >= 13000){
+                            if (toDeal.price >= 14500){
                                 Game.market.deal(toDeal.id,Math.min(toDeal.amount,Game.rooms[target].terminal.store["frame"]),target);
                             }
                         }
@@ -73,13 +80,13 @@ var marketMod = {
                 }
 
                 if (target == "W28S22"){
-                    if (Game.rooms[target].terminal.store["composite"] >= 1000){
+                    if (Game.rooms[target].terminal.store["composite"] >= 3000){
                         var compositeOrders = Game.market.getAllOrders({type: ORDER_BUY, resourceType: "composite"}).filter(order => order.amount > 0).sort(function(a, b) {
                             return b.price - a.price ;
                         });
                         if (compositeOrders.length > 0){
                             var toDeal = compositeOrders[0];
-                            if (toDeal.price >= 4.5){
+                            if (toDeal.price >= 5.1){
                                 Game.market.deal(toDeal.id,Math.min(toDeal.amount,Game.rooms[target].terminal.store["composite"]),target);
                             }
                         }
