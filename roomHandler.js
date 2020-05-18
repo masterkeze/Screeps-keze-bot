@@ -36,53 +36,59 @@ var roomHandler = function(roomName){
         // powerspawn
         if (room.PowerSpawnID){
             var powerspawn = Game.getObjectById(room.PowerSpawnID);
-            if (powerspawn){
+            if (powerspawn && powerspawn.isActive()){
                 runPowerspawn(powerspawn);
             }
         }
         // links
-        if (room.LinksFrom && room.LinksTo){
-            var linksFrom = [];
-            var linksTo = [];
-            for (const LinkID of room.LinksFrom) {
-                var link = Game.getObjectById(LinkID);
-                if (link){
-                    linksFrom.push(link);
-                }
-            }
-            for (const LinkID of room.LinksTo) {
-                var link = Game.getObjectById(LinkID);
-                if (link){
-                    linksTo.push(link);
-                }
-            }
-            if (linksFrom.length>=0 && linksTo.length>=0){
-                runLink(linksFrom,linksTo);
-            }
-        }
+        runLink(roomName);
+        // if (room.LinksFrom && room.LinksTo){
+        //     var linksFrom = [];
+        //     var linksTo = [];
+        //     for (const LinkID of room.LinksFrom) {
+        //         var link = Game.getObjectById(LinkID);
+        //         if (link && link.isActive()){
+        //             linksFrom.push(link);
+        //         }
+        //     }
+        //     for (const LinkID of room.LinksTo) {
+        //         var link = Game.getObjectById(LinkID);
+        //         if (link && link.isActive()){
+        //             linksTo.push(link);
+        //         }
+        //     }
+        //     if (linksFrom.length>=0 && linksTo.length>=0){
+        //         runLink(linksFrom,linksTo);
+        //     }
+        // }
         // towers
-        if (room.TowerIDs){
-            var towers = [];
-            for (const TowerID of room.TowerIDs) {
-                var tower = Game.getObjectById(TowerID);
-                if (tower){
-                    towers.push(tower);
-                }
-            }
-            if (towers.length>0){
-                runTower(towers);
-            }
-        }
+        runTower(roomName);
+        // if (room.TowerIDs){
+        //     var towers = [];
+        //     for (const TowerID of room.TowerIDs) {
+        //         var tower = Game.getObjectById(TowerID);
+        //         if (tower&&tower.isActive()){
+        //             towers.push(tower);
+        //         }
+        //     }
+        //     if (towers.length>0){
+        //         runTower(towers);
+        //     }
+        // }
         // factory
         if (room.FactoryID){
             const factory = Game.getObjectById(room.FactoryID);
-            runFactory(factory);
+            if (factory && factory.isActive()){
+                runFactory(factory);
+            }
         }
         // terminal
         if (room.TerminalID){
             const terminal = Game.getObjectById(room.TerminalID);
-            runTerminal(terminal);
-            runMarket(terminal);
+            if (terminal && terminal.isActive()){
+                runTerminal(terminal);
+                runMarket(terminal);
+            }
         }
         // creeps
         // PC
