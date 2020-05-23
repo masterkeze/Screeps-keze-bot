@@ -1,6 +1,15 @@
 # Screeps-keze-bot
 orginal bot for Screeps 
 
+主流程Main设计  
+1. 从Game.rooms开始，检查每一个房间，区分出Owned Rooms和Unowned Rooms
+2. 更新每一个Owned Room的房间信息Memory
+3. 更新每一个Unowned Room的房间信息Memory
+4. Handle 每一个Owned Rooms
+5. Handle 每一个UnOwned Rooms  
+
+RoomHandler (roomObj)
+
 todo list
 - [ ] 房间统计信息修改，只更新建筑ID相关,linksFrom\linksTo只处理新增的link，不重置其他信息
 - [ ] 任务数据类型设计
