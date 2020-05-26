@@ -69,6 +69,7 @@ var roleHarvester = {
             creep.withdraw(tomb,RESOURCE_ENERGY);
         }
         if (container.store.getFreeCapacity()>0 || (link && container.store.getFreeCapacity(RESOURCE_ENERGY)>0)){
+            creep.memory.dontPullMe = true;
             creep.harvest(source);
         }
         // var dropped = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES);

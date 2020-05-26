@@ -30,7 +30,7 @@ var roleStealer = {
         }
         if ((creep.store.getUsedCapacity() == 0 || creep.memory.harvesting) && creep.ticksToLive >= ticksBack){
             creep.memory.harvesting = true;
-            creep.memory.dontPullMe = true;
+            creep.memory.dontPullMe = false;
             if (creep.pos.isNearTo(flag)){
                 if (!creep.memory.ticksBack){
                     creep.memory.ticksBack = 1515 - creep.ticksToLive;
@@ -69,10 +69,11 @@ var roleStealer = {
             if(creep.transfer(storage,Object.keys(creep.store)[0]) == ERR_NOT_IN_RANGE){
                 creep.moveTo(storage, {visualizePathStyle: {stroke: '#ffffff'},reusePath: 30});
             }
+            if (creep.ticksToLive < 2*ticksBack+5 && creep.store.getFreeCapacity() != 0){
+                creep.suicide();
+            }
         }
-        if (creep.ticksToLive < ticksBack && creep.store.getFreeCapacity() == 0){
-            creep.suicide();
-        }
+
 
     }
 };

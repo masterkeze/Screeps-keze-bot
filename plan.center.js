@@ -126,7 +126,7 @@ var planCenter = {
                 }
                 if (Game.time % 513 == 0 && Memory.factory[room.roomName].waiting.length == 0 && !Memory.factory[room.roomName].working){
                     var taskName = "regular_battery";
-                    if (storage.store["energy"] > 600000 && !Memory.factory[room.roomName].orders[taskName]){
+                    if (storage.store["energy"] > 800000 && !Memory.factory[room.roomName].orders[taskName]){
                         //console.log("check room "+room.roomName);
                         roomObj.prepareOrder("battery",50,"delete","addFactoryOrder,battery,50,"+taskName);
                     }
@@ -140,7 +140,7 @@ var planCenter = {
                 if (Game.time % 317 == 0 && Memory.factory[room.roomName].waiting.length == 0 && !Memory.factory[room.roomName].working){
                     console.log("check room "+room.roomName);
                     var taskName = "decompose_battery";
-                    if (roomObj.getStore("battery") > 0 && !Memory.factory[room.roomName].orders[taskName] && storage.store["energy"] < 400000){
+                    if (roomObj.getStore("battery") > 50 && !Memory.factory[room.roomName].orders[taskName] && storage.store["energy"] < 400000){
                         roomObj.clearFactory();
                         roomObj.prepareAndProduce("energy",60);
                     }

@@ -150,7 +150,7 @@ module.exports.loop = function () {
     // }
 
     var roleContainer = [];
-    var roles = ['distributer','repairer','upgrader','builder','harvester','transferer','upgradeSupplier','attacker','r_harvester','r_transferer','claimer','r_builder','primitive','deposit','cmanager','stealer'];
+    var roles = ['distributer','repairer','upgrader','builder','harvester','transferer','upgradeSupplier','attacker','r_harvester','r_transferer','claimer','r_builder','primitive','deposit','cmanager','stealer','soler'];
     for (var i=0; i<roles.length;i++) {
         var role = roles[i];
         roleContainer.push(require('role.'+role));

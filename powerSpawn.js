@@ -59,7 +59,7 @@ var powerSpwan = {
                     for (const source of sources) {
                         var distance = PC.pos.getRangeTo(source);
                         if (PC.powers[PWR_REGEN_SOURCE].cooldown > distance) continue;
-                        if(!source.effects || !source.effects[0] || source.effects[0].ticksRemaining <= distance){
+                        if(!source.effects || !source.effects[0] || source.effects[0].ticksRemaining <= distance+3){
                             workForSource = true;
                             if (distance <= 3){
                                 if (PC.usePower(PWR_REGEN_SOURCE,source) != OK){

@@ -80,12 +80,12 @@ var planUpgrade = {
                 }else{
                     Memory.groups[planName].roleLimit[0] = Math.min(3,Math.ceil(Store/50000));
                 }
-                if (room.roomName == "W31S23"){
-                    Memory.groups[planName].roleLimit[0] = 1;
-                    Memory.groups[planName].roleBody[0] = [WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE];
-                    Memory.groups[planName].roleLimit[1] = 0;
-                    Memory.groups[planName].roleBody[1] = [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE];
-                }
+                // if (room.roomName == "W31S23"){
+                //     Memory.groups[planName].roleLimit[0] = 1;
+                //     Memory.groups[planName].roleBody[0] = [WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,WORK,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE];
+                //     Memory.groups[planName].roleLimit[1] = 0;
+                //     Memory.groups[planName].roleBody[1] = [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE];
+                // }
                 if (links.length > 0){
                     Memory.groups[planName].SourceID = links[0].id;
                     Memory.groups[planName].roleLimit[1] = 0;

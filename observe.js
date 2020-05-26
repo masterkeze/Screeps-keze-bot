@@ -4,8 +4,8 @@ var observe = {
 //"W30S21","W30S22","W29S22","W29S22",
     run : function(observer){
         const config = {
-            bindRoom:["W29S22","W29S22","W29S22","W26S19","W26S19","W26S19","W26S19","W26S19","W26S19","W26S19","W26S19"],
-            observeList:["W30S23","W30S24","W30S25","W28S20","W27S20","W26S20","W25S20","W24S20","W23S20","W22S20","W21S20"]
+            bindRoom:["W29S22","W29S22","W29S22","W26S19","W26S19","W26S19","W26S19","W26S19","W26S19","W26S19"],
+            observeList:["W30S23","W30S24","W30S25","W27S20","W26S20","W25S20","W24S20","W23S20","W22S20","W21S20"]
         }
         const length = config.observeList.length;
         const index = Game.time % length;

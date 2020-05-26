@@ -167,6 +167,8 @@ var factory = {
                         if (!order.onFinished || order.onFinished == "delete"){
                             if (order.product = "energy"){
                                 room.transfer("F","S",factory.store.energy,"energy");
+                            }else{
+                                room.clearFactory();
                             }
                             delete config.orders[config.working];
                         }else{
