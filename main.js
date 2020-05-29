@@ -136,9 +136,9 @@ module.exports.loop = function () {
     const statistics = require("statistics");
     const towerExp = require("tower");
     const linkfromExp = require("linkFrom");
-    const factoryExp = require("factory");
+    //const factoryExp = require("factory");
     require("runFactory");
-    runFactory(Game.getObjectById("5e895d6525a59169076427e4"));
+    //runFactory(Game.getObjectById("5e895d6525a59169076427e4"));
     const powerSpawnExp = require("powerSpawn");
 
     require("observe").run(Game.getObjectById("5e703e4c580590b6adecce4e"));
@@ -146,7 +146,7 @@ module.exports.loop = function () {
     require("market").run();
     statistics.update();
 
-    factoryExp.run();
+    //factoryExp.run();
     
     if (Game.time % 23 == 0){
         var cpuStart = Game.cpu.getUsed();
@@ -190,7 +190,27 @@ module.exports.loop = function () {
         var p1 = Game.cpu.getUsed();
         Memory.stats.cpu.prepare = p1 - p0;
     }
-
+    // MAIN LOOP
+    for (const roomName of Object.keys(Game.rooms)) {
+        const roomObj = Game.rooms[roomName];
+        if (!roomObj){
+    
+        }
+        if (!Memory.rooms){
+            Memory.rooms = {};
+        }
+        const room = Memory.rooms[roomName];
+        if (!room){
+            continue;
+        }
+        // factory
+        if (room.FactoryID){
+            const factory = Game.getObjectById(room.FactoryID);
+            if (factory && factory.isActive()){
+                runFactory(factory);
+            }
+        }
+    }
     // var plans = ['distribute','primitive','source','build','upgrade','mineral','center','deposit','steal'];
     // for (var i=0; i<plans.length;i++){
     //     var plan = plans[i];

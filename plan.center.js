@@ -115,7 +115,8 @@ var planCenter = {
                     if (storage.store["energy"] > 100000 && !Memory.factory[room.roomName].orders[taskName]){
                         //console.log("check room "+room.roomName);
                         if (roomObj.getStore(mineralType) > 100000){
-                            roomObj.prepareOrder(product,50,"delete","addFactoryOrder,"+product+",50,"+taskName);
+                            roomObj.produce(product,50);
+                            //roomObj.prepareOrder(product,50,"delete","addFactoryOrder,"+product+",50,"+taskName);
                         }
                     }
 
@@ -129,7 +130,7 @@ var planCenter = {
                     var taskName = "regular_battery";
                     if (storage.store["energy"] > 800000 && !Memory.factory[room.roomName].orders[taskName]){
                         //console.log("check room "+room.roomName);
-                        roomObj.prepareOrder("battery",50,"delete","addFactoryOrder,battery,50,"+taskName);
+                        roomObj.produce("battery",50);
                     }
                     if (factory.store["battery"] > 0){
                         roomObj.clearFactory();
@@ -143,7 +144,7 @@ var planCenter = {
                     var taskName = "decompose_battery";
                     if (roomObj.getStore("battery") > 50 && !Memory.factory[room.roomName].orders[taskName] && storage.store["energy"] < 400000){
                         roomObj.clearFactory();
-                        roomObj.prepareAndProduce("energy",60);
+                        roomObj.produce("energy",60);
                     }
                     
                 }
