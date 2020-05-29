@@ -93,7 +93,7 @@ var marketMod = {
                         });
                         if (frameOrders.length > 0){
                             var toDeal = frameOrders[0];
-                            if (toDeal.price >= 17000){
+                            if (toDeal.price >= 18000){
                                 Game.market.deal(toDeal.id,Math.min(toDeal.amount,Game.rooms[target].terminal.store["frame"]),target);
                             }
                         }

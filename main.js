@@ -99,6 +99,33 @@ global.scan = function(resourceType){
     }
 }
 
+global.getCenterLabs = function(roomName){
+    let room = Game.rooms[roomName];
+    if (!room){
+        return 'Invalid room '+roomName;
+    }
+    let labs = room.find(FIND_MY_STRUCTURES,{filter:(structure)=>{return structure.structureType == STRUCTURE_LAB;}});
+    let avgX = 0;
+    let avgY = 0;
+    let count = 0;
+    if (!labs){
+        return 'No lab in this room';
+    }
+    for (let lab of labs){
+        count += 1; 
+        avgX = avgX*(count-1)/count + lab.pos.x/count;
+        avgY = avgY*(count-1)/count + lab.pos.y/count;
+    }
+    let sortedLabs = labs.sort(function(lab1,lab2){
+        let distance1 = Math.abs(lab1.pos.x-avgX)+Math.abs(lab1.pos.y-avgY);
+        let distance2 = Math.abs(lab2.pos.x-avgX)+Math.abs(lab2.pos.y-avgY);
+        //let distance1 = Math.max(Math.abs(lab1.pos.x-avgX),Math.abs(lab1.pos.y-avgY));
+        //let distance2 = Math.max(Math.abs(lab2.pos.x-avgX),Math.abs(lab2.pos.y-avgY));
+        return distance1-distance2;
+    });
+    return sortedLabs;
+}
+
 module.exports.loop = function () {
 
     if (Game.time % 23 == 0){
@@ -110,6 +137,8 @@ module.exports.loop = function () {
     const towerExp = require("tower");
     const linkfromExp = require("linkFrom");
     const factoryExp = require("factory");
+    require("runFactory");
+    runFactory(Game.getObjectById("5e895d6525a59169076427e4"));
     const powerSpawnExp = require("powerSpawn");
 
     require("observe").run(Game.getObjectById("5e703e4c580590b6adecce4e"));

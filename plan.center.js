@@ -57,7 +57,8 @@ var planCenter = {
                 }
 
                 const groupPlan = Memory.groups[planName];
-
+                //groupPlan.roleBody = [[CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE]];
+                //groupPlan.spawnAhead = [51];
                 const storage = Game.getObjectById(groupPlan.StorageID);
                 const terminal = Game.getObjectById(groupPlan.TerminalID);
                 const factory = Game.getObjectById(room.FactoryID);

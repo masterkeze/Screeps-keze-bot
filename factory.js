@@ -47,7 +47,7 @@ function enoughForProduce(room,order){
 var factory = {
     run: function(){
         //return;
-        var rooms = ["W29S22","W28S22","W26S23","W26S19","W31S23"];
+        var rooms = ["W29S22","W28S22","W26S23","W31S23"];
         for (const roomName of rooms) {
             //console.log(roomName);
             const room = Game.rooms[roomName];

@@ -150,8 +150,12 @@ var prototypes = {
             //console.log(name+ " task added!");
         }
 
-        Room.prototype.produce = function(product,amount,name="temp"+Game.time,onSuspended="delete",onFinished="delete"){
-            this.addFactoryOrder(product,amount,name,onSuspended,onFinished);
+        Room.prototype.produce = function(product,amount,name="",onSuspended="delete",onFinished="delete"){
+            let orderName = name;
+            if (!name){
+                orderName = product+"_"+amount;
+            }
+            this.addFactoryOrder(product,amount,orderName,onSuspended,onFinished);
         }
 
         Room.prototype.addFactoryOrder = function(product,amount,name="temp"+Game.time,onSuspended="delete",onFinished="delete"){
