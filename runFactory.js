@@ -6,12 +6,14 @@ global.runFactory = function(factory){
     // CHECK CENTER PLAN
     let roomName = factory.room.name;
     let roomObj = Game.rooms[roomName];
+
     if (!roomObj.storage || !roomObj.terminal){
         return -1;
     }
     if (!Memory.groups || !Memory.groups["center_"+roomName]){
         return -1;
     }
+    let centerPlan = Memory.groups["center_"+roomName];
     if (!Memory.factory){
         Memory.factory = Object();
     }
@@ -65,13 +67,30 @@ global.runFactory = function(factory){
         // idle
         return OK;
     }
+    let product_detail = COMMODITIES[order.product];
+    let product_components = product_detail.components;
+    // 如何计算拆单的数量
+    // 1. 原料/产物总和不能超过工厂容量上限 （单量的上限）,硬性要求
+    // 2. 在冷却时间内，尽量能够准备好下一笔订单的原料 （单量的上限），软性要求，可通过调节中央运输大小，提前填充原料实现
+    
+    if (!order.splitAmount){
+        let components_total = 0;
+        for (const resource of Object.keys(product_components)) {
+            components_total += product_components[resource];
+        }
+        let max_split = Math.floor(50000/components_total);
+        let soft_max_split = Math.floor(Math.max(product_detail.cooldown-2,5)*400/components_total); // 先hardcode了传输效率400/tick，这个和center的workload关系很大，也有用PC替代的情况。
+        // 压bar components_total = 700， cooldown = 20, Math.floor(18*400/700) = 10
+        order.splitAmount = Math.min(max_split,soft_max_split);
+    }
+
     // Split order
-    if (order.amount > 10){
+    if (order.amount > order.splitAmount){
         // Split 5 amount order from the original order
         let order_shadow = { ...order };
         order_shadow.name = order.name + "split";
-        order.amount -= 10;
-        order_shadow.amount = 10;
+        order.amount -= order.splitAmount;
+        order_shadow.amount = order.splitAmount;
         order_shadow.status = "new";
         config.working = order_shadow.name;
         config.waiting.unshift(order.name);
@@ -97,8 +116,6 @@ global.runFactory = function(factory){
     }
 
     if (!order.status||order.status == "new"){
-        let product_detail = COMMODITIES[order.product];
-        let product_components = product_detail.components;
         for (const resource of Object.keys(product_components)) {
             let diff = factory.store[resource] - product_components[resource]*order.amount;
             let total = roomObj.storage.store[resource]+roomObj.terminal.store[resource];
@@ -175,7 +192,6 @@ global.runFactory = function(factory){
                 return OK;
             case ERR_BUSY:
                 // need PWR_OPERATE_FACTORY 
-                let centerPlan = Memory.groups["center_"+roomName];
                 if (centerPlan.PC && Game.powerCreeps[centerPlan.PC]){
                     let PC = Game.powerCreeps[centerPlan.PC];
                     PC.usePower(PWR_OPERATE_FACTORY,factory);
