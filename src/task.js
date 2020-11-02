@@ -1,3 +1,4 @@
+require('lock');
 class Task {
     constructor(name,type="default",source=null,store={}){
         this.name = name
@@ -260,7 +261,6 @@ function clearInvalidTasks(){
         }
     });
 }
-
 // load once global reset
 loadTasks();
 // register as an keep running event
