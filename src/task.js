@@ -82,9 +82,6 @@ class Task {
         return OK;
     }
     callback(){
-
-    }
-    delete(){
         this.subTasks.forEach(taskName => {
             let task = global.tasks[taskName];
             if (task){
@@ -216,7 +213,7 @@ function saveTask(task){
     if (!Memory.tasks){
         Memory.tasks = {};
     }
-    global.tasks = task;
+    global.tasks[task.name] = task;
     Memory.tasks[task.name] = task.serialize();
 }
 /**
@@ -231,5 +228,41 @@ function recoverTask(task){
         return ERR_NOT_FOUND;
     }
 }
+/**
+ * 
+ * @param {Task} task 
+ */
+function deleteTask(task){
+    task.callback();
+    let taskName = task.name;
+    if (global.tasks && global.tasks[taskName]){
+        delete global.tasks[taskName];
+    }
+    if (Memory.tasks && Memory.tasks[taskName]){
+        delete Memory.tasks[taskName];
+    }
+}
+/**
+ * clear outdate tasks and invalid tasks
+ */
+function clearInvalidTasks(){
+    let taskNames = Object.keys(global.tasks);
+    taskNames.forEach((taskName)=>{
+        let task = global.tasks[taskName];
+        if (!task || !task instanceof Task){
+            delete global.tasks[taskName];
+            if (Memory.tasks && Memory.tasks[taskName]){
+                delete Memory.tasks[taskName];
+            }
+        }
+        if (task instanceof Task && !task.validate()){
+            deleteTask(task);
+        }
+    });
+}
 
+// load once global reset
 loadTasks();
+// register as an keep running event
+let eventHandler = require('event');
+eventHandler.register(clearInvalidTasks);
