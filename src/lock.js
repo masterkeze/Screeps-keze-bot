@@ -10,6 +10,7 @@ class Lock{
         this.structure = structure;
         this.store = store;
         this.created = Game.time;
+        this.locked = false;
     }
     serialize(){
         return {
@@ -17,6 +18,7 @@ class Lock{
             store : this.store,
             structure : this.structure.id,
             created : this.created,
+            locked : this.locked
         }
     }
     deserialize(lockData){
@@ -24,6 +26,7 @@ class Lock{
         this.store = lockData.store;
         this.structure = Game.getObjectById(lockData.structure);
         this.created = lockData.created;
+        this.locked = lockData.locked;
     }
     validate(){
         if (this.structure && Game.getObjectById(this.structure.id)){
@@ -31,6 +34,12 @@ class Lock{
         }else{
             return false;
         }
+    }
+    lock(){
+
+    }
+    release(){
+        
     }
 }
 /**

@@ -1,4 +1,4 @@
-require('lock');
+require('mount.lock');
 class Task {
     constructor(name,type="default",source=null,store={}){
         this.name = name
