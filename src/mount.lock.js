@@ -1,4 +1,5 @@
 'use strict';
+require("./mount.moment");
 module.exports = function () {
     _.assign(Structure.prototype, lockExtension);
 }

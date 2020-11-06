@@ -1,4 +1,5 @@
-require('mount.lock');
+'use strict';
+//require('mount.lock');
 class Task {
     constructor(name,type="default",source=null,store={}){
         this.name = name
@@ -83,19 +84,31 @@ class Task {
         return OK;
     }
     callback(){
-        this.subTasks.forEach(taskName => {
+        this.callbacks.forEach(taskName => {
             let task = global.tasks[taskName];
             if (task){
-                task.callbacks = task.callbacks.filter((callbackTaskName)=>{return callbackTaskName != taskName});
+                task.subTasks = task.subTasks.filter((subTaskName)=>{return subTaskName != this.name});
+                saveTask(task);
             }
         });
+        this.callbacks = [];
+        saveTask(this);
+        return OK;
     }
 }
 
+// transfer one resource type from one source to one target
 class TransferTask extends Task {
-    constructor(name,source=null,store=null,target=null){
+    constructor(name,source=null,resourceType=null,amount=null,target=null){
+        let store = {};
+        if (resourceType && amount){
+            store[resourceType] = amount;
+        }
         super(name,"transfer",source,store);
         this.target = target;
+        if (this.validate()){
+            console.log(`发布任务 [room ${this.source.room.name}] 从 [${this.source.structureType}] 向 [${this.target.structureType}] 运输 ${amount} [${resourceType}]`);
+        }
     }
     serialize(){
         let serializedData = super.serialize();
@@ -115,28 +128,101 @@ class TransferTask extends Task {
     }
 }
 
-class SendTask extends Task{
-    constructor(name,source=null,store=null,toRoom=null){
-        super(name,"send",source,store);
-        this.toRoom = toRoom;
-    }
-    serialize(){
-        let serializedData = super.serialize();
-        serializedData.toRoom = this.toRoom;
-        return serializedData;
-    }
-    deserialize(taskData){
-        super.deserialize(taskData);
-        this.toRoom = taskData.toRoom;
+class GatherPlan {
+    constructor(source,store,target){
+        this.source = source;
+        this.store = store;
+        this.target = target;
     }
     validate(){
-        if (super.validate() && this.toRoom){
+        if (this.source && Game.getObjectById(this.source.id) 
+        && this.target && Game.getObjectById(this.target.id) 
+        && _.sum(Object.values(this.store))){
             return true;
         }else{
             return false;
         }
     }
 }
+
+// gather multibple resources from several sources
+class GatherTask extends Task {
+    constructor(name,source=null,store=null){
+        super(name,"gather",source,store);
+        this.totalStore = {};
+    }
+    /**
+     * 
+     * @param {GatherPlan} plan 
+     */
+    addPlan(plan){
+        if (!plan.validate()){
+            return ERR_INVALID_ARGS;
+        }
+        if (plan.target.id != this.source.id){
+            // the target of the plan doesn't match the source of this gather task
+            return ERR_INVALID_TARGET;
+        }
+        let planStore = plan.store;
+        let planSource = plan.source;
+        let taskName = null;
+        let transferTask = null;
+        for (const [resourceType, value] of Object.entries(planStore)) {
+            if (value > 0){
+                taskName = getTaskName("transfer");
+                transferTask = new TransferTask(taskName,planSource,resourceType,value,this.source);
+                this.waitFor(transferTask);
+                this.totalStore[resourceType] = this.totalStore[resourceType] ? this.totalStore[resourceType] + value : value;
+            }
+        }
+        return OK;
+    }
+    serialize(){
+        let serializedData = super.serialize();
+        serializedData.totalStore = this.totalStore;
+        return serializedData;
+    }
+    deserialize(taskData){
+        super.deserialize(taskData);
+        this.totalStore = taskData.totalStore;
+    }
+}
+
+
+class SendTask extends Task{
+    constructor(name,source=null,resourceType=null,amount=null,toRoom=null){
+        let store = {};
+        if (resourceType && amount){
+            store[resourceType] = amount;
+        }
+        super(name,"send",source,store);
+        this.toRoom = toRoom;
+        this.transactionCost = null;
+        if (this.validate()){
+            this.transactionCost = Game.market.calcTransactionCost(amount,this.store.room.name,toRoom);
+        }
+        
+    }
+    serialize(){
+        let serializedData = super.serialize();
+        serializedData.toRoom = this.toRoom;
+        serializedData.transactionCost = this.transactionCost;
+        return serializedData;
+    }
+    deserialize(taskData){
+        super.deserialize(taskData);
+        this.toRoom = taskData.toRoom;
+        this.transactionCost = taskData.transactionCost;
+    }
+    validate(){
+        if (super.validate() && this.toRoom && this.transactionCost){
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
 
 function loadTasks(){
     // load tasks from memory
@@ -156,6 +242,9 @@ function loadTasks(){
                 case "send":
                     task = new SendTask(taskName);
                     break;
+                case "gather":
+                    task = new GatherTask(taskName);
+                    break;
                 default:
                     task = new Task(taskName);
                     break;
@@ -173,16 +262,36 @@ function loadTasks(){
     });
 }
 
-Room.prototype.createTransferTask = function(source,store,target){
-    if (!source || !target || !Game.getObjectById(source.id) || !Game.getObjectById(target.id)){
+Room.prototype.createTransferTask = function(source,resourceType,amount,target){
+    if (!source || !target || !Game.getObjectById(source.id) || !Game.getObjectById(target.id) || !resourceType || !amount){
         return null;
     }
     let taskName = getTaskName("transfer");
-    let task = new TransferTask(taskName,source,store,target);
+    let task = new TransferTask(taskName,source,resourceType,amount,target);
     saveTask(task);
     return task;
 }
 
+Room.prototype.createGatherTask = function(source,store,target){
+    if (!source || !target || !Game.getObjectById(source.id) || !Game.getObjectById(target.id)){
+        return null;
+    }
+    let taskName = getTaskName("gather");
+    let task = new GatherTask(taskName,target,{});
+    let gatherPlan = new GatherPlan(source,store,target);
+    task.addPlan(gatherPlan);
+    saveTask(task);
+    return task;
+}
+
+global.createTransferStore = function(source,store,target){
+    const transferStore = new TransferStore(source,store,target);
+    if (transferStore.validate()){
+        return transferStore;
+    }else{
+        return null;
+    }
+}
 
 function getTaskName(type = "default"){
     let randomText = "";
@@ -247,6 +356,7 @@ function deleteTask(task){
  * clear outdate tasks and invalid tasks
  */
 function clearInvalidTasks(){
+    //console.log("Clearing invalid tasks");
     let taskNames = Object.keys(global.tasks);
     taskNames.forEach((taskName)=>{
         let task = global.tasks[taskName];
