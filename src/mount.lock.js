@@ -1,6 +1,7 @@
 'use strict';
 require("./mount.moment");
-module.exports = function () {
+
+module.exports = function(){
     _.assign(Structure.prototype, lockExtension);
 }
 
@@ -46,6 +47,23 @@ const lockExtension = {
                 unlockedStore[type] = this.getUnlockedStore(type);
             }
             return unlockedStore;
+        }
+    },
+    addAnonymousLock(lockingStore){
+        let lockedStore = this.getLock();
+        let lockedDetail = lockedStore.detail;
+        let resourceType = Object.keys(lockingStore)[0];
+        let index = 1;
+        let lockName = `${resourceType}-${Game.time}`;
+        while (lockedDetail[lockName]){
+            lockName = `${resourceType}-${Game.time}-${index}`;
+            index += 1;
+        }
+        let result = this.addLock(lockName,lockingStore);
+        if (result == OK){
+            return lockName;
+        }else{
+            return null;
         }
     },
     addLock(name,lockingStore){
@@ -118,6 +136,27 @@ const lockExtension = {
             return OK;
         }
     },
+
+    hasLock(name){
+        let lockedStore = this.getLock();
+        let lockedDetail = lockedStore.detail;
+        if (lockedDetail[name]){
+            return true;
+        }else{
+            return false;
+        }
+    },
+
+    getLockingStore(name){
+        let lockedStore = this.getLock();
+        let lockedDetail = lockedStore.detail;
+        if (lockedDetail[name]){
+            return lockedDetail[name];
+        }else{
+            return {};
+        }
+    },
+
     resetLock(){
         if (!Memory.lock){
             Memory.lock = {}
@@ -130,3 +169,5 @@ const lockExtension = {
         return OK;
     }
 }
+
+_.assign(Structure.prototype, lockExtension);

@@ -1,5 +1,5 @@
 'use strict';
-//require('mount.lock');
+require('mount.lock');
 class Task {
     constructor(name,type="default",source=null,store={}){
         this.name = name
@@ -9,6 +9,7 @@ class Task {
         this.created = Game.time;
         this.subTasks = [];
         this.callbacks = [];
+        this.locks = [];
     }
     serialize(){
         return {
@@ -18,7 +19,8 @@ class Task {
             store : this.store,
             created : this.created,
             subTasks : this.subTasks,
-            callbacks : this.callbacks
+            callbacks : this.callbacks,
+            locks : this.locks
         }
     }
     deserialize(taskData){
@@ -29,6 +31,68 @@ class Task {
         this.created = taskData.created;
         this.subTasks = taskData.subTasks;
         this.callbacks = taskData.callbacks;
+        this.locks = taskData.locks;
+    }
+    addLock(lockingStore){
+        let lockName = this.source.addAnonymousLock(lockingStore);
+        if (lockName){
+            this.locks.push(lockName);
+            return OK;
+        }
+        return ERR_INVALID_ARGS;
+    }
+    mergeLocks(){
+        if (this.locks.length > 1){
+            for (let i = 0; i < this.locks.length; i++) {
+                const lockName = this.locks[i];
+                if (this.source.hasLock(lockName)){
+                    let lockingStore = this.source.getLockingStore(lockName);
+                    if (Object.keys(lockingStore).length > 0){
+                        lockingStores.push(lockingStore);
+                    }
+                    this.source.releaseLock(lockName);
+                }
+            }
+            let lockingSum = storeSum(lockingStores);
+            this.addLock(lockingSum);
+            saveTask(this);
+        }
+        return OK;
+    }
+    // 每个类型要单独写
+    split(store){
+        if (Object.keys(store) == 0 || Object.keys(this.store) == 0 || this.locks.length == 0){
+            return ERR_INVALID_ARGS;
+        } 
+        let remainingStore = storeDiff(this.store,store);
+        if (_.sum(Object.values(remainingStore)) <= 0){
+            console.log(`拆分任务失败 [room ${this.source.room.name}] [task ${this.name}] 尝试从 [${JSON.stringify(this.store)}] 拆分 [${JSON.stringify(store)}]`);
+            return ERR_INVALID_ARGS;
+        }
+        this.mergeLocks();
+        let newTaskName = getTaskName(this.type);
+        let newTask = new Task(newTaskName);
+        
+        newTask.locks = [];
+        newTask.subTasks = [];
+        newTask.callbacks = [];
+        this.store = remainingStore;
+        newTask.store = store;
+
+        this.source.releaseLock(this.locks[0]);
+        this.addLock(remainingStore);
+        newTask.addLock(store);
+ 
+        newTask.callbacks = [this.name];
+        newTask.subTasks = [];
+        this.subTasks.push(newTaskName);
+
+        console.log(JSON.stringify(newTask.deserialize()));
+        console.log(JSON.stringify(this.deserialize()));
+
+        saveTask(this);
+        saveTask(newTask);
+        return newTask;
     }
     validate(){
         if (this.source && Game.getObjectById(this.source.id)){
@@ -84,14 +148,37 @@ class Task {
         return OK;
     }
     callback(){
+        // release all locks
+        let lockingStores = [];
+        for (let i = 0; i < this.locks.length; i++) {
+            const lockName = this.locks[i];
+            if (this.source.hasLock(lockName)){
+                let lockingStore = this.source.getLockingStore(lockName);
+                if (Object.keys(lockingStore).length > 0){
+                    lockingStores.push(lockingStore);
+                }
+                this.source.releaseLock(lockName);
+            }
+            
+        }
+        this.locks = [];
+        console.log(JSON.stringify(lockingStores));
+        let lockingSum = storeSum(lockingStores);
+        let resourceTypes = Object.keys(lockingSum);
+        console.log(JSON.stringify(lockingSum));
+        // callback
         this.callbacks.forEach(taskName => {
             let task = global.tasks[taskName];
             if (task){
                 task.subTasks = task.subTasks.filter((subTaskName)=>{return subTaskName != this.name});
+                if (resourceTypes.length > 0){
+                    task.addLock(lockingSum);
+                }
                 saveTask(task);
             }
         });
         this.callbacks = [];
+
         saveTask(this);
         return OK;
     }
@@ -107,7 +194,11 @@ class TransferTask extends Task {
         super(name,"transfer",source,store);
         this.target = target;
         if (this.validate()){
-            console.log(`发布任务 [room ${this.source.room.name}] 从 [${this.source.structureType}] 向 [${this.target.structureType}] 运输 ${amount} [${resourceType}]`);
+            if (this.addLock(store) == OK){
+                console.log(`发布任务成功 [room ${this.source.room.name}] 从 [${this.source.structureType}] 向 [${this.target.structureType}] 运输 ${amount} [${resourceType}]`);
+            }else{
+                console.log(`发布任务失败 加资源锁失败 [room ${this.source.room.name}] 从 [${this.source.structureType}] 向 [${this.target.structureType}] 运输 ${amount} [${resourceType}]`);
+            }
         }
     }
     serialize(){
@@ -175,6 +266,7 @@ class GatherTask extends Task {
                 this.totalStore[resourceType] = this.totalStore[resourceType] ? this.totalStore[resourceType] + value : value;
             }
         }
+        saveTask(this);
         return OK;
     }
     serialize(){
@@ -222,6 +314,10 @@ class SendTask extends Task{
         }
     }
 }
+
+// class ShareTask extends Task{
+//     constructor(name,)
+// }
 
 
 function loadTasks(){
@@ -371,6 +467,38 @@ function clearInvalidTasks(){
         }
     });
 }
+
+/**
+ * store1 - store2, negative values are allowed
+ * @param {Store} store1 
+ * @param {Store} store2 
+ */
+function storeDiff(store1,store2){
+    let resourceTypes = [...new Set(Object.keys(store1).concat(Object.keys(store2)))];
+    let result = {};
+    resourceTypes.forEach((resourceType) => {
+        let value1 = store1[resourceType] ? store1[resourceType] : 0;
+        let value2 = store2[resourceType] ? store2[resourceType] : 0;
+        let diff = value1 - value2;
+        if (diff){
+            result[resourceType] = diff;
+        }
+    });
+    return result;
+}
+/**
+ * sum store[]
+ * @param {Store[]} storeArr 
+ */
+function storeSum(storeArr){
+    let result = {};
+    storeArr.forEach((store)=>{
+        result = storeDiff(result,storeDiff({},store));
+    })
+    return result;
+}
+
+
 // load once global reset
 loadTasks();
 // register as an keep running event

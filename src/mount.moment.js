@@ -1,5 +1,6 @@
 'use strict';
-module.exports = function () {
+
+module.exports = function(){
     _.assign(Structure.prototype, momentExtension);
     _.assign(Creep.prototype, momentExtension);
     _.assign(PowerCreep.prototype, momentExtension);
@@ -148,3 +149,7 @@ const momentExtension = {
         return store;
     }
 }
+
+_.assign(Structure.prototype, momentExtension);
+_.assign(Creep.prototype, momentExtension);
+_.assign(PowerCreep.prototype, momentExtension);
