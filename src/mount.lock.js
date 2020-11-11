@@ -88,7 +88,7 @@ const lockExtension = {
                 continue;
             }
             if (!realStore[resourceType]){
-                console.log("getStore 为空");
+                console.log(`${this.structureType} 中没有${resourceType}来加锁`);
                 return ERR_NOT_ENOUGH_RESOURCES;
             }
             if (lockedTotal[resourceType]){
