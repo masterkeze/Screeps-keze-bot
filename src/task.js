@@ -1,5 +1,6 @@
 'use strict';
 require('mount.lock');
+
 class Task {
 	constructor(name, type = 'default', source = null, store = {}) {
 		this.name = name;
@@ -59,47 +60,16 @@ class Task {
 		}
 		return OK;
 	}
+	releaseLocks(){
+		this.locks.forEach((lockName)=>{
+			this.source.releaseLock(lockName);
+		})
+		this.locks = [];
+		saveTask(this);
+	}
 	// 每个类型要单独写
 	split(store) {
-		if (Object.keys(store) == 0 || Object.keys(this.store) == 0 || this.locks.length == 0) {
-			if (this.locks.length == 0) {
-				console.log('没有锁');
-			}
-			return ERR_INVALID_ARGS;
-		}
-		let remainingStore = storeDiff(this.store, store);
-		if (_.sum(Object.values(remainingStore)) <= 0) {
-			console.log(
-				`拆分任务失败 [room ${this.source.room.name}] [task ${this.name}] 尝试从 [${JSON.stringify(
-					this.store
-				)}] 拆分 [${JSON.stringify(store)}]`
-			);
-			return ERR_INVALID_ARGS;
-		}
-		this.mergeLocks();
-		// copy data
-		let newTaskName = getTaskName(this.type);
-		let newTask = new Task(newTaskName);
-		let taskData = this.serialize();
-		taskData.name = newTaskName;
-		taskData.store = store;
-		taskData.callbacks = [];
-		taskData.subTasks = [];
-		taskData.locks = [];
-		newTask.deserialize(taskData);
-		// add locks
-		this.store = remainingStore;
-		this.source.releaseLock(this.locks[0]);
-		this.locks = [];
-		this.addLock(remainingStore);
-		newTask.addLock(store);
-
-		this.waitFor(newTask);
-
-		console.log(JSON.stringify(newTask.deserialize()));
-		console.log(JSON.stringify(this.deserialize()));
-
-		return newTask;
+		// need to be rewritten.
 	}
 	validate() {
 		if (this.source && Game.getObjectById(this.source.id)) {
@@ -164,10 +134,9 @@ class Task {
 				if (Object.keys(lockingStore).length > 0) {
 					lockingStores.push(lockingStore);
 				}
-				this.source.releaseLock(lockName);
 			}
 		}
-		this.locks = [];
+		this.releaseLocks();
 		console.log(JSON.stringify(lockingStores));
 		let lockingSum = storeSum(lockingStores);
 		let resourceTypes = Object.keys(lockingSum);
@@ -267,9 +236,9 @@ class TransferTask extends Task {
 			}
 		});
 
-		console.log(JSON.stringify(newTask.serialize()));
-		console.log(JSON.stringify(this.serialize()));
-
+		// console.log(JSON.stringify(newTask.serialize()));
+		// console.log(JSON.stringify(this.serialize()));
+		saveTask(this);
 		return newTask;
 	}
 }
@@ -486,6 +455,7 @@ function saveTask(task) {
 	}
 	global.tasks[task.name] = task;
 	Memory.tasks[task.name] = task.serialize();
+	// console.log("saving "+JSON.stringify(task.serialize()));
 }
 /**
  * @param  {Task} task
