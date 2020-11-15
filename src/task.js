@@ -414,6 +414,19 @@ Room.prototype.createGatherTask = function(source, store, target) {
 	return task;
 };
 
+let taskCache = {
+	lastUpdated : Game.time
+};
+
+// load tasks into cache, and form indexes to get tasks.
+function refreshTasks (){
+
+}
+
+Room.prototype.getTransferTasks = function(){
+
+}
+
 global.createTransferStore = function(source, store, target) {
 	const transferStore = new TransferStore(source, store, target);
 	if (transferStore.validate()) {

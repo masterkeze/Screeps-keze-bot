@@ -29,32 +29,29 @@ module.exports = {
 		}
 
 		let taskName = creep.memory.workingOn;
-        let task = tasks[taskName];
-        
-
+		let task = tasks[taskName];
 
 		if (!task || !task.validate()) {
 			// get a task to soleve
 			task = getTransferTask(creep);
-        }
-        
+		}
+
 		if (!task) {
 			creep.memory.workingOn = null;
 			creep.memory.phase = PHASES.IDLE;
-			// clear stuff, and turn to idle state
+			// clear stuff, and turn to idle state, default behavior
 		} else {
+			let creepStore = creep.getStore();
+			let usedCapacity = _.sum(Object.values(creepStore));
+			let totalCapacity = creep.store.getCapacity();
+			let unusedCapacity = totalCapacity - usedCapacity;
 
-            let creepStore = creep.getStore();
-            let usedCapacity = _.sum(Object.values(creepStore));
-            let totalCapacity = creep.store.getCapacity();
-            let unusedCapacity = totalCapacity - usedCapacity;
-
-            if (totalCapacity < _.sum(Object.values(task.store))){
-                console.log(`[warning] getTransferTask assigns an oversized task ${task.name} to ${creep.name}`);
-            }
+			if (totalCapacity < _.sum(Object.values(task.store))) {
+				console.log(`[warning] getTransferTask assigns an oversized task ${task.name} to ${creep.name}`);
+			}
 
 			const resourceType = Object.keys(task.store)[0];
-			const amount = Math.min(totalCapacity,task.store[resourceType]);
+			const amount = Math.min(totalCapacity, task.store[resourceType]);
 			const currentState = creep.getState();
 			let runResult, newState, config;
 
@@ -76,8 +73,8 @@ module.exports = {
 					// transfer OK, task complete
 					task.callback();
 					// unregister the creep
-                    creep.memory.phase = PHASES.IDLE;
-                    creep.memory.workingOn = null;
+					creep.memory.phase = PHASES.IDLE;
+					creep.memory.workingOn = null;
 					creep.transitionState('', {});
 					break;
 				case PHASES.WITHDRAW:
@@ -98,34 +95,46 @@ module.exports = {
 						config = { source: task.source, resourceType: resourceType, amount: amount };
 						creep.memory.phase = PHASES.WITHDRAW;
 						creep.transitionState(newState, config);
-					}else{
-                        let clearResourceType = Object.keys(creep.store)[0];
-                        let clearAmount = creep.store[clearResourceType];
-                        let solved = false;
-                        if (creep.room.storage){
-                            let storeFree = creep.room.storage.store.getCapacity() - _.sum(Object.values(creep.room.storage.getStore()));
-                            if (storeFree >= clearAmount){
-                                newState = 'transferOnce';
-                                config = { target: creep.room.storage, resourceType: clearResourceType, amount: clearAmount };
-                                creep.transitionState(newState, config);
-                                solved = true;
-                            }
-                        }
-                        if (!solved && creep.room.terminal){
-                            let terminalFree = creep.room.terminal.store.getCapacity() - _.sum(Object.values(creep.room.terminal.getStore()));
-                            if (terminalFree >= clearAmount){
-                                newState = 'transferOnce';
-                                config = { target: creep.room.terminal, resourceType: clearResourceType, amount: clearAmount };
-                                creep.transitionState(newState, config);
-                                solved = true;
-                            }
-                        }
-                        if (!solved){
-                            console.log(`[warning] ${creep.room.name} 爆仓了。`);
-                            Game.notify(`[warning] ${creep.room.name} 爆仓了。`,30);
-                            creep.drop(clearResourceType);
-                        }
-                    }
+					} else {
+						let clearResourceType = Object.keys(creep.store)[0];
+						let clearAmount = creep.store[clearResourceType];
+						let solved = false;
+						if (creep.room.storage) {
+							let storeFree =
+								creep.room.storage.store.getCapacity() -
+								_.sum(Object.values(creep.room.storage.getStore()));
+							if (storeFree >= clearAmount) {
+								newState = 'transferOnce';
+								config = {
+									target: creep.room.storage,
+									resourceType: clearResourceType,
+									amount: clearAmount
+								};
+								creep.transitionState(newState, config);
+								solved = true;
+							}
+						}
+						if (!solved && creep.room.terminal) {
+							let terminalFree =
+								creep.room.terminal.store.getCapacity() -
+								_.sum(Object.values(creep.room.terminal.getStore()));
+							if (terminalFree >= clearAmount) {
+								newState = 'transferOnce';
+								config = {
+									target: creep.room.terminal,
+									resourceType: clearResourceType,
+									amount: clearAmount
+								};
+								creep.transitionState(newState, config);
+								solved = true;
+							}
+						}
+						if (!solved) {
+							console.log(`[warning] ${creep.room.name} 爆仓了。`);
+							Game.notify(`[warning] ${creep.room.name} 爆仓了。`, 30);
+							creep.drop(clearResourceType);
+						}
+					}
 					break;
 				default:
 					break;
