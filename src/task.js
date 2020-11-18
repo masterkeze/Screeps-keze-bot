@@ -418,11 +418,6 @@ let taskCache = {
 	lastUpdated : Game.time
 };
 
-// load tasks into cache, and form indexes to get tasks.
-function refreshTasks (){
-
-}
-
 Room.prototype.getTransferTasks = function(){
 
 }
@@ -514,6 +509,35 @@ function clearInvalidTasks() {
 			deleteTask(task);
 		}
 	});
+}
+
+/**
+ * 日常维护任务，要做的事
+ * 1. 清理掉不合法的任务，这些任务直接callback
+ * 2. 清理已完成的任务，可能要挂载触发器
+ * 3. 进行中的任务，如果负责执行的creep没了，变成待执行状态
+ * 4. 等待中的任务，检查是否还有子任务，如果有子任务则继续等待
+ * 5. 没有子任务的[等待中]或[新]任务，如果可执行，则变为待执行状态
+ * 6. 没有子任务的[等待中]或[新]任务，如果不可执行，则分别按顺序使用 direct solve, global solve来生成子任务。
+ * 7. 没有找到解的任务，清理掉。
+ * 8. 任何超时的任务，清理掉。
+ */
+function handleTasks() {
+	clearInvalidTasks();
+	let taskNames = Object.keys(global.tasks);
+	taskNames.forEach((taskName) => {
+		let task = global.tasks[taskName];
+
+	});
+}
+
+/**
+ * 返回空[]或者[GatherPlan]
+ * @param {Structure} target 
+ * @param {Store} store 
+ */
+function simpleSolve(target,store){
+	return new GatherPlan(source,store,target);
 }
 
 /**
