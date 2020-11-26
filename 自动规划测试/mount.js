@@ -1,23 +1,28 @@
-const mountGlobalAKA = require('./mount.globalAKA');
-const mountGlobalFunc = require('./mount.globalFunc');
-const mountMoment = require('./mount.moment');
-const mountCreep = require('./mount.creep');
-const mountCreepState = require('./mount.creep.state');
-const mountStructure = require('./mount.structure');
+'use strict';
+// 挂载整合过的包
+const mountUtils = require('./mount.utils');
+const mountGlobal = require('./mount.global');
 
-// 挂载所有的额外属性和方法
-function mount() {
-    if (!global.hasExtension) {
-        console.log('[mount] 重新挂载拓展');
-        global.hasExtension = true;
-        mountGlobalAKA();
-        mountGlobalFunc();
-        mountMoment();
-        mountCreep();
-        mountCreepState();
-        mountStructure();
+const packages=[mountUtils,mountGlobal];
+
+module.export = {
+    load : function() {
+        if (!global.hasExtension) {
+            console.log('[mount] 重新挂载拓展');
+            global.hasExtension = true;
+            packages.forEach((package)=>{
+                try {
+                    package.forEach((mount)=>{
+                        try {
+                            mount();
+                        } catch (error) {
+                            global.logError("挂载扩展",`${mount.name} 出错:${error}`);
+                        }
+                    });
+                } catch (error) {
+                    global.logError("挂载模块包",`${package.name} 出错:${error}`);
+                }
+            });
+        }
     }
 }
-
-const eventHandler = require('./event');
-eventHandler.register(mount);

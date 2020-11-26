@@ -1,4 +1,5 @@
 // handle functions need to be executed every tick or every few ticks
+// 只接受runtime添加的函数，如果是模块自带的载入函数或者清理函数，应当直接hard-code进载入代码统一管理
 if (!global.events){
     global.events = {};
 }
