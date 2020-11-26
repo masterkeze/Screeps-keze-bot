@@ -1,10 +1,11 @@
 'use strict';
 // load modules
 require('./BuildingCache');
-const eventHandler = require('./event');
+let mount = require('./mount');
+
 module.exports.loop = function () {
-    eventHandler.run();
-    // run events
+    // 挂载依赖
+    mount();
     // run creeps
     // run buildings
 }
