@@ -1,11 +1,10 @@
-'use strict';
 // 挂载整合过的包
 const mountUtils = require('./mount.utils');
 const mountGlobal = require('./mount.global');
 
-const packages=[mountUtils,mountGlobal];
+let packages=[mountUtils,mountGlobal];
 
-module.export = function() {
+module.exports = function() {
     if (!global.hasExtension) {
         console.log('[mount] 重新挂载拓展');
         global.hasExtension = true;

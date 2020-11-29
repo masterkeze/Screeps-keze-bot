@@ -1,4 +1,3 @@
-'use strict';
 // load modules
 require('./BuildingCache');
 let mount = require('./mount');

@@ -6,4 +6,4 @@ const globalAKA = require('./mount.globalAKA');
 const globalFunc = require('./mount.globalFunc');
 
 const mounts = [globalAKA,globalFunc];
-module.export = mounts;
+module.exports = mounts;
