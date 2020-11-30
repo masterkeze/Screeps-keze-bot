@@ -8,6 +8,7 @@ function sayHello(str: string): string {
     return 'hello' + str
 }
 
-function testCreep(creep: Creep): string {
-    return
+function testCreep(moment: Moment): string {
+
+    return "";
 }
