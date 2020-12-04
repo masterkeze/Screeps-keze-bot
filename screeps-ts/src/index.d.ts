@@ -41,14 +41,14 @@ interface MomentCollection {
  * 记录该建筑上被加的锁
  */
 interface LockDetail {
-    [lockName: string]: store
+    [lockName: string]: StoreDefinition
 }
 
 /**
  * 记录该建筑上被加的锁
  */
 interface Lock {
-    total: store
+    total: StoreDefinition
     detail: LockDetail
 }
 
@@ -66,7 +66,7 @@ interface TaskData {
     name: string
     type: string
     source: string
-    store: store
+    store: StoreDefinition
     created: number
     subTasks: string[]
     callbacks: string[]
@@ -84,7 +84,7 @@ interface TransferTaskData extends TaskData {
  * 多资源运输任务数据结构
  */
 interface GatherTaskData extends TaskData {
-    totalStore : store
+    totalStore : StoreDefinition
 }
 
 /**
@@ -104,51 +104,30 @@ interface CreepMemory {
 }
 
 /**
- * Creep 状态信息
+ * Creep 状态信息 序列化后的信息，挂载于Memory
  */
 interface CreepState {
     currentState : string
     data : {
-        [stateName: string] : StateData
+        [stateName: string] : StateMemoryData
     }
 }
 
 /**
- * Creep 状态机具体信息基类, 每个状态都至少有一个目标物
+ * Creep 状态机序列化信息的基类
  */
-interface StateData {
-    targetID : string
-}
+interface StateMemoryData {}
 
 /**
- * Creep 状态机 withdrawOnce数据类型
+ * Creep 状态机初始化信息的基类
  */
-interface StateData_withdrawOnce extends StateData {
-    resourceType : string
-    amount : number
-}
+interface StateData {}
 
 /**
- * Creep 状态机 transferOnce数据类型
+ * Creep 提取一次 状态机初始化
  */
-interface StateData_transferOnce extends StateData {
-    resourceType : string
-    amount : number
-}
-
-
-/**
- * Creep 状态机 reach数据类型
- */
-interface StateData_reach extends StateData {
-    range : number
-}
-
-/**
- * Creep 状态机 buildConstruction数据类型
- */
-interface StateData_buildConstruction extends StateData {
-    range : number
+interface StateData_withdrawOnce {
+    source : Structure | Tombstone | Ruin
 }
 
 declare module NodeJS {
