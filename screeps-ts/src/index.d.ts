@@ -101,6 +101,28 @@ interface SendTaskData extends TaskData {
 interface CreepMemory {
     role : string
     groupID ?: string
+    registered ?: number 
+    state ?: CreepState
+}
+
+type BaseStateConstant = 'reach'
+type StateConstant = BaseStateConstant
+type StateExport = {
+    [state in StateConstant]: () => IStateConfig
+}
+
+/**
+ * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态
+ */
+type StateContinue = 0|1
+
+/**
+ * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
+ */
+interface IStateConfig {
+    onEnter(creep : Creep, data :StateData) : void
+    update(creep : Creep) : StateContinue
+    onExit(creep : Creep) : void
 }
 
 /**
@@ -124,10 +146,17 @@ interface StateMemoryData {}
 interface StateData {}
 
 /**
- * Creep 提取一次 状态机初始化
+ * Creep 状态机 提取一次 source : Structure | Tombstone | Ruin
  */
 interface StateData_withdrawOnce {
     source : Structure | Tombstone | Ruin
+}
+
+/**
+ * Creep 状态机 抵达 target : RoomPosition | {pos:RoomPosition}
+ */
+interface StateData_reach {
+    target : RoomPosition | {pos:RoomPosition}
 }
 
 declare module NodeJS {
@@ -137,4 +166,13 @@ declare module NodeJS {
         hasExtension?: boolean
         moment?: Moment
     }
+}
+
+
+/**
+ * Creep 拓展
+ */
+interface Creep {
+    work() : void
+    runState() : string
 }
