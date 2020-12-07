@@ -1,4 +1,5 @@
 import states from 'state'
+const directions:string = '↑↗→↘↓↙←↖';
 // creep 原型拓展
 export default class CreepExtension extends Creep {
     /**
@@ -52,6 +53,21 @@ export default class CreepExtension extends Creep {
         }
         
         const stateConfig :IStateConfig = states[currentState]();
-        let newState = stateConfig.update(this);
+    }
+    
+    public move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS{
+        if (target instanceof Creep){
+
+        }else{
+            this.say(directions[target-1],true);
+        }
+        return this._move(target);
+    }
+
+    public moveTo(
+        target: RoomPosition | { pos: RoomPosition },
+        opts?: MoveToOpts,
+    ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND{
+        return this._moveTo(target,opts);
     }
 }
