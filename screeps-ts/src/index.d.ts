@@ -41,14 +41,14 @@ interface MomentCollection {
  * 记录该建筑上被加的锁
  */
 interface LockDetail {
-    [lockName: string]: StoreDefinition
+    [lockName: string]: store
 }
 
 /**
  * 记录该建筑上被加的锁
  */
 interface Lock {
-    total: StoreDefinition
+    total: store
     detail: LockDetail
 }
 
@@ -84,28 +84,28 @@ interface TransferTaskData extends TaskData {
  * 多资源运输任务数据结构
  */
 interface GatherTaskData extends TaskData {
-    totalStore : StoreDefinition
+    totalStore: store
 }
 
 /**
  * 发送任务数据结构
  */
 interface SendTaskData extends TaskData {
-    toRoom : string
-    transactionCost : number
+    toRoom: string
+    transactionCost: number
 }
 
 /**
  * Creep Memory结构
  */
 interface CreepMemory {
-    role : string
-    groupID ?: string
-    registered ?: number 
-    state ?: CreepState
+    role: string
+    groupID?: string
+    registered?: number
+    state?: CreepState
 }
 
-type BaseStateConstant = 'reach'
+type BaseStateConstant = 'reach' | 'upgrade' | 'withdrawOnce'
 type StateConstant = BaseStateConstant
 type StateExport = {
     [state in StateConstant]: () => IStateConfig
@@ -114,49 +114,59 @@ type StateExport = {
 /**
  * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态
  */
-type StateContinue = 0|1
+type StateContinue = 0 | 1
 
 /**
  * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
  */
 interface IStateConfig {
-    onEnter(creep : Creep, data :StateData) : void
-    update(creep : Creep) : StateContinue
-    onExit(creep : Creep) : void
+    onEnter(creep: Creep, data: StateData): StateContinue
+    update(creep: Creep): StateContinue
+    onExit(creep: Creep): void
 }
 
 /**
  * Creep 状态信息 序列化后的信息，挂载于Memory
  */
 interface CreepState {
-    currentState : string
-    data : {
-        [stateName: string] : StateMemoryData
+    currentState: string
+    data: {
+        [stateName: string]: StateMemoryData
     }
 }
 
 /**
  * Creep 状态机序列化信息的基类
  */
-interface StateMemoryData {}
+interface StateMemoryData {
+    targetID ?: string
+    sourceID ?: string
+ }
 
 /**
  * Creep 状态机初始化信息的基类
  */
-interface StateData {}
+interface StateData { }
 
 /**
  * Creep 状态机 提取一次 source : Structure | Tombstone | Ruin
  */
 interface StateData_withdrawOnce {
-    source : Structure | Tombstone | Ruin
+    source: Structure | Tombstone | Ruin
+}
+
+/**
+ * Creep 状态机 升级 target : StructureController
+ */
+interface StateData_upgrade {
+    target: StructureController
 }
 
 /**
  * Creep 状态机 抵达 target : RoomPosition | {pos:RoomPosition}
  */
 interface StateData_reach {
-    target : RoomPosition | {pos:RoomPosition}
+    target: RoomPosition | { pos: RoomPosition }
 }
 
 declare module NodeJS {
@@ -173,6 +183,7 @@ declare module NodeJS {
  * Creep 拓展
  */
 interface Creep {
-    work() : void
-    runState() : string
+    work(): void
+    runState(): string
+    getStateData(stateName: string): StateMemoryData
 }

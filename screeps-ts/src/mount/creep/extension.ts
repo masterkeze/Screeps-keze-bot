@@ -35,6 +35,13 @@ export default class CreepExtension extends Creep {
         return 1;
     }
 
+    public getStateData(state : string) : StateMemoryData{
+        if (!this.memory.state){
+            this.memory.state = {currentState:"",data:{}};
+        }
+        return this.memory.state.data[state];
+    }
+
     public runCurrentState(){
         if (!this.memory.state){
             this.memory.state = {currentState:"",data:{}};
