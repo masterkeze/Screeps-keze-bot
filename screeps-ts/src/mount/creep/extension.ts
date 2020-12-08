@@ -1,4 +1,6 @@
 import states from 'state'
+import {Moment} from 'modules/moment'
+import {Helper} from 'utils'
 const directions:string = '↑↗→↘↓↙←↖';
 // creep 原型拓展
 export default class CreepExtension extends Creep {
@@ -30,6 +32,19 @@ export default class CreepExtension extends Creep {
         // 执行当前状态
         let newState:string = this.runCurrentState();
 
+    }
+    /**
+     * 返回moment store,如果传了resourceType，则返回具体的数值，否则返回store
+     * @param  {string} resourceType
+     * @returns store|number
+     */
+    public getMomentStore(resourceType:string):store|number{
+        let moment = Moment.get(this.id);
+        if (resourceType){
+            return moment.resourcesChange + this.store[resourceType];
+        } else {
+            return Helper.storeAdd(moment.resourcesChange,JSON.parse(JSON.stringify(this.store)) as store);
+        }
     }
 
     public register(groupID:string): number{

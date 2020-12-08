@@ -1,5 +1,5 @@
-import {mount} from './mount'
-import {setup,teardown,powerCreepRunner,creepRunner,roomRunner} from './utils'
+import { mount } from './mount'
+import { setup, teardown, powerCreepRunner, creepRunner, roomRunner } from './utils'
 // screeps 代码入口
 module.exports.loop = function (): void {
     // 挂载依赖

@@ -5,6 +5,9 @@ interface store {
     [resourceType: string]: number
 }
 
+// 所有记录的动作
+type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath"
+
 /**
  * 记录单tick操作汇总，记录多个对象操作同一个对象时的细节信息。
  * 目的：更精确的储量，伤害统计
@@ -14,17 +17,19 @@ interface store {
  */
 interface Moment {
     // 本tick中其他对象向这个对象送入的资源
-    transfer?: Object
+    in?: store
     // 本tick中其他对象从这个对象取走的资源
-    withdraw?: Object
+    out?: store
     // 本tick的资源变化合计
-    resourcesChange?: Object
+    resourcesChange?: store
     // 本tick中其他对象向这个对象造成的总伤害量
-    attack?: number
+    damaged?: number
     // 本tick中其他对象向这个对象提供的总治疗量
-    heal?: number
+    healed?: number
     // 本tick中这个对象的hits变化合计
     hitsChange?: number
+    // 动作记录
+    actions?: Array<ActionConstant>
 }
 
 /**
@@ -33,7 +38,7 @@ interface Moment {
 interface MomentCollection {
     now: number
     data?: {
-        [structureID: string]: Moment
+        [objectID: string]: Moment
     }
 }
 
@@ -139,9 +144,9 @@ interface CreepState {
  * Creep 状态机序列化信息的基类
  */
 interface StateMemoryData {
-    targetID ?: string
-    sourceID ?: string
- }
+    targetID?: string
+    sourceID?: string
+}
 
 /**
  * Creep 状态机初始化信息的基类
@@ -174,10 +179,15 @@ declare module NodeJS {
     interface Global {
         // 是否已经挂载拓展
         hasExtension?: boolean
-        moment?: Moment
+        moment?: MomentCollection
     }
 }
 
+
+// 内存对象
+interface Memory {
+    lock?: LockCollection
+}
 
 /**
  * Creep 拓展
@@ -186,6 +196,8 @@ interface Creep {
     work(): void
     runState(): string
     getStateData(stateName: string): StateMemoryData
+    getMomentStore(resourceType:string):store|number
+    // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode
     _build(target: ConstructionSite): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES | ERR_RCL_NOT_ENOUGH
@@ -209,7 +221,3 @@ interface Creep {
     _upgradeController(target: StructureController): ScreepsReturnCode
     _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
 }
-
-type ActionConfliction1 = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal"
-type ActionConfliction2 = "rangedAttack" | "rangedMassAttack" | "build" | "repair" | "rangedHeal"
-type ActionConfliction3 = "move"
