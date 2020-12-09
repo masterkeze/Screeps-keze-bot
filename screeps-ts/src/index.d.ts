@@ -6,7 +6,7 @@ interface store {
 }
 
 // 所有记录的动作
-type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath"
+type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "other"
 
 /**
  * 记录单tick操作汇总，记录多个对象操作同一个对象时的细节信息。
@@ -110,10 +110,10 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgrade' | 'withdrawOnce'
+type BaseStateConstant = 'reach' //| 'upgrade' | 'withdrawOnce'
 type StateConstant = BaseStateConstant
 type StateExport = {
-    [state in StateConstant]: () => IStateConfig
+    [state in StateConstant]: (creep:Creep|PowerCreep) => IStateConfig
 }
 
 /**
@@ -122,12 +122,19 @@ type StateExport = {
 type StateContinue = 0 | 1
 
 /**
+ * Action Wrapper 封装一下状态机action
+ */
+type StateActionWrapper = {
+    [actionName in ActionConstant] ?: (creep: Creep|PowerCreep) => StateContinue
+}
+
+/**
  * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
  */
 interface IStateConfig {
-    onEnter(creep: Creep, data: StateData): StateContinue
-    update(creep: Creep): StateContinue
-    onExit(creep: Creep): void
+    onEnter(creep: Creep|PowerCreep, data: StateData): StateContinue
+    actions: StateActionWrapper
+    onExit(creep: Creep|PowerCreep): void
 }
 
 /**
@@ -196,7 +203,7 @@ interface Creep {
     work(): void
     runState(): string
     getStateData(stateName: string): StateMemoryData
-    getMomentStore(resourceType:string):store|number
+    getMomentStore(resourceType: string): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode

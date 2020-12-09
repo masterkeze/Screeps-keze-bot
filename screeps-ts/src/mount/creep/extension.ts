@@ -88,7 +88,8 @@ export default class CreepExtension extends Creep {
             return "";
         }
 
-        const stateConfig: IStateConfig = states[currentState]();
+        let stateConfig: IStateConfig = states[currentState]();
+        
     }
 
     public move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS {

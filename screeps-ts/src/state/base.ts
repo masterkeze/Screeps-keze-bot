@@ -11,43 +11,48 @@ const states: {
         onEnter(creep: Creep, data: StateData_reach): StateContinue {
             return 0;
         },
-        update(creep): StateContinue {
-            return 0;
+        actions: {
+            move: (creep: Creep|PowerCreep): StateContinue => {
+                return 0;
+            },
+            moveTo: (creep: Creep|PowerCreep): StateContinue => {
+                return 0;
+            }
         },
-        onExit(creep): void {
-
-        }
-    }),
-    /**
-     * 升级控制器
-     */
-    upgrade: (): IStateConfig => ({
-        onEnter(creep: Creep, data: StateData_upgrade): StateContinue {
-            let stateData = creep.getStateData("upgrade");
-            stateData.targetID = data.target.id;
-            return 0;
-        },
-        update(creep): StateContinue {
-            return 0;            
-        },
-        onExit(creep): void {
-
-        }
-    }),
-    /**
-     * 取一次资源
-     */
-    withdrawOnce:():IStateConfig=>({
-        onEnter(creep:Creep,data:StateData_withdrawOnce):StateContinue{
-            return 0
-        },
-        update(creep): StateContinue {
-            return 0;            
-        },
-        onExit(creep): void {
+        onExit(creep: Creep): void {
 
         }
     })
+    // /**
+    //  * 升级控制器
+    //  */
+    // upgrade: (): IStateConfig => ({
+    //     onEnter(creep: Creep, data: StateData_upgrade): StateContinue {
+    //         let stateData = creep.getStateData("upgrade");
+    //         stateData.targetID = data.target.id;
+    //         return 0;
+    //     },
+    //     update(creep): StateContinue {
+    //         return 0;            
+    //     },
+    //     onExit(creep): void {
+
+    //     }
+    // }),
+    // /**
+    //  * 取一次资源
+    //  */
+    // withdrawOnce:():IStateConfig=>({
+    //     onEnter(creep:Creep,data:StateData_withdrawOnce):StateContinue{
+    //         return 0
+    //     },
+    //     update(creep): StateContinue {
+    //         return 0;            
+    //     },
+    //     onExit(creep): void {
+
+    //     }
+    // })
 }
 
 export default states;
