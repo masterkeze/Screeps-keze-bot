@@ -26,7 +26,8 @@ export namespace Lock {
      * @param  {string} name
      * @param  {store} store
      */
-    export function add(id: string, name: string, store: store): OK | ERR_NAME_EXISTS {
+    export function add(id: string, name: string, store: store): OK | ERR_NAME_EXISTS | ERR_NOT_FOUND {
+        if (!name) return ERR_NOT_FOUND;
         let lock = get(id);
         let lockDetail = lock.detail;
         if (lockDetail[name]) {

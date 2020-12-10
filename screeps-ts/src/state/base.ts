@@ -13,10 +13,7 @@ const states: {
         },
         actions: {
             move: (creep: Creep|PowerCreep): StateContinue => {
-                return 0;
-            },
-            moveTo: (creep: Creep|PowerCreep): StateContinue => {
-                return 0;
+                return StateContinue.Exit;
             }
         },
         onExit(creep: Creep): void {

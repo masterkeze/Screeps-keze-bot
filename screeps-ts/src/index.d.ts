@@ -119,7 +119,10 @@ type StateExport = {
 /**
  * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态
  */
-type StateContinue = 0 | 1
+declare enum StateContinue {
+    Exit = 0,
+    Continue = 1
+}
 
 /**
  * Action Wrapper 封装一下状态机action

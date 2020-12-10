@@ -35,37 +35,76 @@ export default class CreepExtension extends Creep {
 
     }
     /**
-     * 返回moment store,如果传了resourceType，则返回具体的数值，否则返回store
+     * 返回moment 储量
      * @param  {string} resourceType
-     * @returns store|number
+     * @returns 如果传了resourceType，则返回具体的数值，否则返回store
      */
     public getMomentStore(resourceType?: string): store | number {
         let moment = Moment.get(this.id);
         if (resourceType) {
-            return moment.resourcesChange[resourceType] + this.store[resourceType];
+            let momentStore = moment.resourcesChange[resourceType];
+            let actualStore = this.store[resourceType];
+            if (!momentStore) momentStore = 0;
+            if (!actualStore) actualStore = 0;
+            return momentStore + actualStore;
         } else {
             return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(this.store)) as store);
         }
     }
+    /**
+     * 返回上锁的储量
+     * @param  {string} resourceType?
+     * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+     */
     public getLockedStore(resourceType?: string): store | number {
         let lock = Lock.get(this.id);
-        return lock.total;
+        if (resourceType) {
+            if (lock.total[resourceType]) {
+                return lock.total[resourceType];
+            } else {
+                return 0;
+            }
+        } else {
+            return lock.total;
+        }
     }
+    /**
+     * 返回未上锁的储量 = moment储量 - 上锁的储量
+     * @param  {string} resourceType?
+     * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+     */
     public getUnlockedStore(resourceType?: string): store | number {
-        let lock = Lock.get(this.id);
-        return lock.total;
+        let momentStore = this.getMomentStore(resourceType);
+        let lockedStore = this.getLockedStore(resourceType);
+        if (resourceType) {
+            momentStore = momentStore as number;
+            lockedStore = lockedStore as number;
+            return momentStore - lockedStore;
+        } else {
+            momentStore = momentStore as store;
+            lockedStore = lockedStore as store;
+            return Helper.storeMinus(momentStore, lockedStore);
+        }
     }
-    public addLock(name: string, store: store): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS {
-        let lock = Lock.get(this.id);
+    /**
+     * 给对象加锁
+     * @param  {string} name
+     * @param  {store} store
+     */
+    public addLock(name: string, store: store): OK | ERR_NAME_EXISTS | ERR_INVALID_ARGS | ERR_NOT_FOUND {
         // 需要校验store的有效性
         // 1. 不为空
         let resourceTypes = Object.keys(store);
         if (resourceTypes.length == 0) return ERR_INVALID_ARGS;
         // 2. 不为负
         let minValue = Math.min(...Object.values(store));
-        if (minValue <= 0) return ERR_INVALID_ARGS;
-
-        return OK;
+        if (minValue < 0) return ERR_INVALID_ARGS;
+        // 3. 空间是否足够
+        let storeDiff = Helper.storeMinus(this.getUnlockedStore() as store, store);
+        let minStoreDiff = Math.min(...Object.values(storeDiff));
+        if (minStoreDiff < 0) return ERR_INVALID_ARGS;
+        // 加锁
+        return Lock.add(this.id, name, store);
     }
 
     public register(groupID: string): number {
@@ -89,7 +128,26 @@ export default class CreepExtension extends Creep {
         }
 
         let stateConfig: IStateConfig = states[currentState]();
-        
+        let actions = stateConfig.actions;
+        let actionNames: ActionConstant[] = Object.keys(actions) as ActionConstant[];
+        let stateContinue: StateContinue = StateContinue.Exit;
+        for (const actionName of actionNames) {
+            if (Moment.setAction(this.id, actionName) == OK) {
+                let action = actions[actionName];
+                let actionReturnCode = action(this);
+                if (actionReturnCode == StateContinue.Continue) {
+                    stateContinue = StateContinue.Continue;
+                }
+            } else {
+                stateContinue = StateContinue.Continue;
+            }
+        }
+
+        if (stateContinue == StateContinue.Continue) {
+            return currentState;
+        } else {
+            return "";
+        }
     }
 
     public move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS {
