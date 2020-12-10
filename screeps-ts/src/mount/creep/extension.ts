@@ -165,4 +165,21 @@ export default class CreepExtension extends Creep {
     ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
         return this._moveTo(target, opts);
     }
+
+    public withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode{
+        let returnCode = this._withdraw(target,resourceType,amount);
+        if (returnCode == OK){
+            let delta:number = 0;
+            if (amount){
+                delta = amount;
+            }else{
+                delta = Math.min(this.store.getFreeCapacity(resourceType),target.store[resourceType]);
+            }
+        }
+        let storeChange:store = {};
+        storeChange[resourceType] = amount;
+        Moment.setStoreChange(this.id,"in",storeChange);
+        Moment.setStoreChange(target.id,"out",storeChange);
+        return returnCode;
+    }
 }

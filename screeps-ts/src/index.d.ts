@@ -5,6 +5,20 @@ interface store {
     [resourceType: string]: number
 }
 
+/**
+ * 有pos属性
+ */
+interface IHasPos {
+    pos : RoomPosition
+}
+
+/**
+ * 有store属性
+ */
+interface IHasStore {
+    store : Store
+}
+
 // 所有记录的动作
 type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "other"
 
