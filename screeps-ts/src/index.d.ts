@@ -16,7 +16,7 @@ interface IHasPos {
  * 有store属性
  */
 interface IHasStore {
-    store : Store
+    store : StoreDefinitionUnlimited
 }
 
 // 所有记录的动作
@@ -127,7 +127,7 @@ interface CreepMemory {
 type BaseStateConstant = 'reach' //| 'upgrade' | 'withdrawOnce'
 type StateConstant = BaseStateConstant
 type StateExport = {
-    [state in StateConstant]: (creep:Creep|PowerCreep) => IStateConfig
+    [state in StateConstant]: () => IStateConfig
 }
 
 /**
@@ -149,7 +149,7 @@ type StateActionWrapper = {
  * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
  */
 interface IStateConfig {
-    onEnter(creep: Creep|PowerCreep, data: StateData): StateContinue
+    onEnter(creep: Creep|PowerCreep, data: StateData): void
     actions: StateActionWrapper
     onExit(creep: Creep|PowerCreep): void
 }

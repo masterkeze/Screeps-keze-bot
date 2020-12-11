@@ -118,11 +118,11 @@ export default class CreepExtension extends Creep {
         return this.memory.state.data[state];
     }
 
-    public runCurrentState() {
+    public runCurrentState():""|StateConstant {
         if (!this.memory.state) {
             this.memory.state = { currentState: "", data: {} };
         }
-        let currentState = this.memory.state.currentState;
+        let currentState = this.memory.state.currentState as StateConstant;
         if (!currentState) {
             return "";
         }
@@ -158,14 +158,12 @@ export default class CreepExtension extends Creep {
         }
         return this._move(target);
     }
-
-    public moveTo(
-        target: RoomPosition | { pos: RoomPosition },
-        opts?: MoveToOpts,
-    ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
-        return this._moveTo(target, opts);
-    }
-
+    /**
+     * withdraw成功时记录到moment中
+     * @param  {Structure|Tombstone|Ruin} target
+     * @param  {ResourceConstant} resourceType
+     * @param  {number} amount?
+     */
     public withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode{
         let returnCode = this._withdraw(target,resourceType,amount);
         if (returnCode == OK){
@@ -173,13 +171,14 @@ export default class CreepExtension extends Creep {
             if (amount){
                 delta = amount;
             }else{
-                delta = Math.min(this.store.getFreeCapacity(resourceType),target.store[resourceType]);
+                let targetStore = target as IHasStore;
+                delta = Math.min(this.store.getFreeCapacity(resourceType),targetStore.store[resourceType]);
             }
+            let storeChange:store = {};
+            storeChange[resourceType] = delta;
+            Moment.setStoreChange(this.id,"in",storeChange);
+            Moment.setStoreChange(target.id,"out",storeChange);
         }
-        let storeChange:store = {};
-        storeChange[resourceType] = amount;
-        Moment.setStoreChange(this.id,"in",storeChange);
-        Moment.setStoreChange(target.id,"out",storeChange);
         return returnCode;
     }
 }

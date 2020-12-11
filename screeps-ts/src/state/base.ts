@@ -8,8 +8,8 @@ const states: {
      * 抵达某处
      */
     reach: (): IStateConfig => ({
-        onEnter(creep: Creep, data: StateData_reach): StateContinue {
-            return 0;
+        onEnter(creep: Creep, data: StateData_reach): void {
+
         },
         actions: {
             move: (creep: Creep|PowerCreep): StateContinue => {
