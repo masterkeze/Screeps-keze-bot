@@ -245,3 +245,24 @@ interface Creep {
     _upgradeController(target: StructureController): ScreepsReturnCode
     _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
 }
+
+type RoleConstant = "primitive"|"harvester"|"builder"
+
+type GroupConstant = "primitive"|"build"|"harvest"
+
+interface GroupBaseData {
+    name : string
+    room : string
+    type : GroupConstant
+    config : GroupRoleConfig
+
+}
+
+type GroupRoleConfig = {
+    [roleName in RoleConstant] ?: GroupRoleData
+}
+
+interface GroupRoleData {
+    roleLimit : number
+    roleBody : BodyPartConstant[]
+}
