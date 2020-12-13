@@ -1,6 +1,10 @@
-import { Helper } from 'utils';
+import { Helper } from 'helper';
 
 export namespace Lock {
+    /**
+     * 通过对象标识，获取对象的锁信息
+     * @param  {string} id
+     */
     export function init(id: string): void {
         if (!Memory.lock) {
             Memory.lock = {}

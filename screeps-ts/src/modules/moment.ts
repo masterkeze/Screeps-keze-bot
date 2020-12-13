@@ -1,4 +1,4 @@
-import { Helper } from 'utils'
+import { Helper } from 'helper'
 
 const Aconfliction = new Set(["harvest", "attack", "build", "repair", "dismantle", "attackController", "rangedHeal", "heal"]);
 const Rconfliction = new Set(["rangedAttack", "rangedMassAttack", "build", "repair", "rangedHeal"]);

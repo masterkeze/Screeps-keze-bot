@@ -1,3 +1,4 @@
+import mountCreep from './creep'
 /**
  * 挂载所有的属性和方法
  */
@@ -9,7 +10,7 @@ export function mount (): void {
         // 挂载前置工作
         workBeforeMount();
         // mount packeges
-
+        mountCreep();
         // 挂载完成后工作
         workAfterMount();
     }

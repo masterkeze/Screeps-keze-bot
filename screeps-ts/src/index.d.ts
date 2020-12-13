@@ -9,18 +9,18 @@ interface store {
  * 有pos属性
  */
 interface IHasPos {
-    pos : RoomPosition
+    pos: RoomPosition
 }
 
 /**
  * 有store属性
  */
 interface IHasStore {
-    store : StoreDefinitionUnlimited
+    store: StoreDefinitionUnlimited
 }
 
 // 所有记录的动作
-type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "other"
+type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "upgrade" | "other" 
 
 /**
  * 记录单tick操作汇总，记录多个对象操作同一个对象时的细节信息。
@@ -124,8 +124,9 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' //| 'upgrade' | 'withdrawOnce'
-type StateConstant = BaseStateConstant
+type BaseStateConstant = 'reach' | 'upgrade'// | 'withdrawOnce'
+type EmptyState = ""
+type StateConstant = BaseStateConstant|EmptyState
 type StateExport = {
     [state in StateConstant]: () => IStateConfig
 }
@@ -142,16 +143,16 @@ declare enum StateContinue {
  * Action Wrapper 封装一下状态机action
  */
 type StateActionWrapper = {
-    [actionName in ActionConstant] ?: (creep: Creep|PowerCreep) => StateContinue
+    [actionName in ActionConstant]?: (creep: Creep | PowerCreep) => StateContinue
 }
 
 /**
  * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
  */
 interface IStateConfig {
-    onEnter(creep: Creep|PowerCreep, data: StateData): void
+    onEnter(creep: Creep | PowerCreep, data: StateData): void
     actions: StateActionWrapper
-    onExit(creep: Creep|PowerCreep): void
+    onExit(creep: Creep | PowerCreep): void
 }
 
 /**
@@ -164,39 +165,36 @@ interface CreepState {
     }
 }
 
+interface Pos {
+    x: number
+    y: number
+    roomName: string
+}
+
 /**
  * Creep 状态机序列化信息的基类
  */
 interface StateMemoryData {
     targetID?: string
     sourceID?: string
+    targetPos?: Pos
+    sourcePos?: Pos
+    range?: number
+    controllerID?: string
 }
 
 /**
  * Creep 状态机初始化信息的基类
  */
-interface StateData { }
-
-/**
- * Creep 状态机 提取一次 source : Structure | Tombstone | Ruin
- */
-interface StateData_withdrawOnce {
-    source: Structure | Tombstone | Ruin
+interface StateData { 
+    targetPos : RoomPosition | { pos: RoomPosition }
+    range ?: number
 }
-
-/**
- * Creep 状态机 升级 target : StructureController
- */
-interface StateData_upgrade {
-    target: StructureController
+interface StateData_withdrawOnce extends StateData {}
+interface StateData_upgrade extends StateData_reach {
+    controllerID : string
 }
-
-/**
- * Creep 状态机 抵达 target : RoomPosition | {pos:RoomPosition}
- */
-interface StateData_reach {
-    target: RoomPosition | { pos: RoomPosition }
-}
+interface StateData_reach extends StateData {}
 
 declare module NodeJS {
     // 全局对象
@@ -211,15 +209,32 @@ declare module NodeJS {
 // 内存对象
 interface Memory {
     lock?: LockCollection
+    group?: GroupCollection
 }
 
+interface PowerCreep {
+    work(): void
+}
+
+interface Room {
+    work(): void
+}
+
+interface PowerCreep {
+    work(): void
+    runState(): string
+    getStateData(stateName: StateConstant): StateMemoryData
+    getCurrentState():StateConstant
+    getMomentStore(resourceType: string): store | number
+}
 /**
  * Creep 拓展
  */
 interface Creep {
     work(): void
     runState(): string
-    getStateData(stateName: string): StateMemoryData
+    getStateData(stateName: StateConstant): StateMemoryData
+    getCurrentState():StateConstant
     getMomentStore(resourceType: string): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
@@ -246,23 +261,32 @@ interface Creep {
     _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
 }
 
-type RoleConstant = "primitive"|"harvester"|"builder"
+type RoleConstant = "primitive" | "harvester" | "builder"
 
-type GroupConstant = "primitive"|"build"|"harvest"
+type GroupConstant = "primitive" | "build" | "harvest"
 
-interface GroupBaseData {
-    name : string
-    room : string
-    type : GroupConstant
-    config : GroupRoleConfig
+interface GroupCollection {
+    [name: string]: GroupData
+}
 
+interface GroupData {
+    name: string
+    room: string
+    type: GroupConstant
+    roleConfig: GroupRoleConfig
+    creeps: string[]
 }
 
 type GroupRoleConfig = {
-    [roleName in RoleConstant] ?: GroupRoleData
+    [roleName in RoleConstant]?: GroupRoleData
 }
 
 interface GroupRoleData {
-    roleLimit : number
-    roleBody : BodyPartConstant[]
+    roleLimit: number
+    roleBody: BodyPartConstant[]
+}
+
+interface IGroupConfig {
+    init(groupData: GroupData): void
+    update(): void
 }

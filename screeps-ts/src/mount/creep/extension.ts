@@ -1,7 +1,7 @@
 import states from 'state'
 import { Moment } from 'modules/moment'
 import { Lock } from 'modules/lock'
-import { Helper } from 'utils'
+import { Helper } from 'helper'
 const directions: string = '↑↗→↘↓↙←↖';
 // creep 原型拓展
 export default class CreepExtension extends Creep {
@@ -118,15 +118,20 @@ export default class CreepExtension extends Creep {
         return this.memory.state.data[state];
     }
 
-    public runCurrentState():""|StateConstant {
+    public getCurrentState(): StateConstant {
         if (!this.memory.state) {
             this.memory.state = { currentState: "", data: {} };
         }
         let currentState = this.memory.state.currentState as StateConstant;
         if (!currentState) {
             return "";
+        } else {
+            return currentState;
         }
+    }
 
+    public runCurrentState():StateConstant {
+        let currentState = this.getCurrentState();
         let stateConfig: IStateConfig = states[currentState]();
         let actions = stateConfig.actions;
         let actionNames: ActionConstant[] = Object.keys(actions) as ActionConstant[];
