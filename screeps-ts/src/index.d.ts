@@ -313,3 +313,10 @@ interface IGroupConfig {
     init(groupData: GroupData): void
     update(): void
 }
+
+interface SpawnConfig {
+    body : BodyPartConstant[]
+    name : string
+    memory : CreepMemory
+    priority : number
+}
