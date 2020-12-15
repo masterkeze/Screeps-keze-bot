@@ -1,0 +1,3 @@
+npm install rollup --global
+npm install @rollup/plugin-commonjs --save-dev
+npm install rollup-plugin-typescript2 typescript

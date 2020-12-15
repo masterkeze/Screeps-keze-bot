@@ -1,5 +1,7 @@
 node_modules/
 .node_modules/
+dist/
+.dist/
 built/*
 tests/cases/rwc/*
 tests/cases/test262/*
@@ -99,3 +101,4 @@ tests/cases/user/prettier/prettier
 .eslintcache
 **/package.json
 package-lock.json
+screeps-ts/dist/main.js

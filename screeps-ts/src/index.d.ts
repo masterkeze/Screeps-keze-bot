@@ -22,6 +22,29 @@ interface IHasStore {
 // 所有记录的动作
 type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "upgrade" | "other" 
 
+// work相关动作
+type WorkActionConstant = "build" | "dismantle" | "harvest" | "repair" | "upgradeController"
+
+// carry相关动作
+type CarryActionConstant = "drop" | "pickup" | "transfer" | "withdraw"
+
+// move相关动作
+type MoveActionConstant = "move" | "moveTo" | "moveByPath"
+
+// attack相关动作
+type AttackActionConstant = "attack"
+
+// rangedAttack相关动作
+type RangedAttackActionConstant = "rangedAttack" | "rangedMassAttack"
+
+// heal相关动作
+type HealActionConstant = "heal" | "rangedHeal"
+
+// claim相关动作
+type ClaimActionConstant = "claimController" | "attackController" | "reserveController"
+
+
+
 /**
  * 记录单tick操作汇总，记录多个对象操作同一个对象时的细节信息。
  * 目的：更精确的储量，伤害统计
@@ -128,7 +151,7 @@ type BaseStateConstant = 'reach' | 'upgrade'// | 'withdrawOnce'
 type EmptyState = ""
 type StateConstant = BaseStateConstant|EmptyState
 type StateExport = {
-    [state in StateConstant]: () => IStateConfig
+    [state in StateConstant]?: () => IStateConfig
 }
 
 /**
