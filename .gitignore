@@ -102,3 +102,4 @@ tests/cases/user/prettier/prettier
 **/package.json
 package-lock.json
 screeps-ts/dist/main.js
+screeps-ts/dist.config.js

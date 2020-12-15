@@ -2,6 +2,9 @@
 // import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
+import dir from './dist.config'
+
+
 // import screeps from 'rollup-plugin-screeps'
 // import copy from 'rollup-plugin-copy'
 
@@ -37,7 +40,7 @@ import typescript from 'rollup-plugin-typescript2'
 export default {
     input: 'src/main.ts',
     output: {
-        file: 'dist/main.js',
+        file: dir,
         format: 'cjs',
         sourcemap: true
     },
