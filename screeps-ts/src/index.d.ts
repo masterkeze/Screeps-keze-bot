@@ -304,13 +304,19 @@ type GroupRoleConfig = {
     [roleName in RoleConstant]?: GroupRoleData
 }
 
+interface GroupInitData {
+    room : string
+    sourceID ?: string
+    sourcePos ?: Pos
+}
+
 interface GroupRoleData {
     roleLimit: number
     roleBody: BodyPartConstant[]
 }
 
 interface IGroupConfig {
-    init(groupData: GroupData): void
+    init(name:string,data:GroupInitData): void
     update(): void
 }
 

@@ -1,4 +1,5 @@
 import mountCreep from './creep'
+import mountStructures from './structures'
 /**
  * 挂载所有的属性和方法
  */
@@ -11,6 +12,7 @@ export function mount (): void {
         workBeforeMount();
         // mount packeges
         mountCreep();
+        mountStructures();
         // 挂载完成后工作
         workAfterMount();
     }
