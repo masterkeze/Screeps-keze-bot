@@ -194,6 +194,11 @@ interface Pos {
     roomName: string
 }
 
+interface Coor {
+    x: number
+    y: number
+}
+
 /**
  * Creep 状态机序列化信息的基类
  */
@@ -241,6 +246,38 @@ interface PowerCreep {
 
 interface Room {
     work(): void
+    getSpawnQueue(): SpawnConfig[]
+    getTerrainCache(): TerrainCahce
+    spawn: StructureSpawn[]
+    container: StructureContainer[]
+    tower: StructureTower[]
+    link: StructureLink[]
+    extension: StructureExtension[]
+    road: StructureRoad[]
+    wall: StructureWall[]
+    rampart: StructureRampart[]
+    portal: StructurePortal[]
+    lab: StructureLab[]
+    deposit: Deposit[]
+    powerBank: StructurePowerBank[]
+    extractor: StructureExtractor
+    observer: StructureObserver
+    nuker: StructureNuker
+    powerSpawn: StructurePowerSpawn
+    factory: StructureFactory
+    invaderCore: StructureInvaderCore
+    mineral: Mineral
+    my: boolean
+    level: number
+}
+
+interface TerrainCahce {
+    sourcePos ?: Coor[]
+    controllerPos ?: Coor[]
+    mineralPos ?: Coor[]
+    depositPos ?: Coor[]
+    powerBankPos ?: Coor[]
+    portalPos ?: Coor[]
 }
 
 interface PowerCreep {
