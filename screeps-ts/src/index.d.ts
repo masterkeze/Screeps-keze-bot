@@ -20,7 +20,7 @@ interface IHasStore {
 }
 
 // 所有记录的动作
-type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "upgrade" | "other" 
+type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "upgrade" | "other"
 
 // work相关动作
 type WorkActionConstant = "build" | "dismantle" | "harvest" | "repair" | "upgradeController"
@@ -148,8 +148,8 @@ interface CreepMemory {
 }
 
 type BaseStateConstant = 'reach' | 'upgrade'// | 'withdrawOnce'
-type EmptyState = ""
-type StateConstant = BaseStateConstant|EmptyState
+type IdleState = "idle"
+type StateConstant = BaseStateConstant | IdleState
 type StateExport = {
     [state in StateConstant]?: () => IStateConfig
 }
@@ -182,7 +182,7 @@ interface IStateConfig {
  * Creep 状态信息 序列化后的信息，挂载于Memory
  */
 interface CreepState {
-    currentState: string
+    currentState: StateConstant
     data: {
         [stateName: string]: StateMemoryData
     }
@@ -214,15 +214,15 @@ interface StateMemoryData {
 /**
  * Creep 状态机初始化信息的基类
  */
-interface StateData { 
-    targetPos : RoomPosition | { pos: RoomPosition }
-    range ?: number
+interface StateData {
+    targetPos: RoomPosition | { pos: RoomPosition }
+    range?: number
 }
-interface StateData_withdrawOnce extends StateData {}
+interface StateData_withdrawOnce extends StateData { }
 interface StateData_upgrade extends StateData_reach {
-    controllerID : string
+    controllerID: string
 }
-interface StateData_reach extends StateData {}
+interface StateData_reach extends StateData { }
 
 declare module NodeJS {
     // 全局对象
@@ -272,19 +272,19 @@ interface Room {
 }
 
 interface TerrainCahce {
-    sourcePos ?: Coor[]
-    controllerPos ?: Coor[]
-    mineralPos ?: Coor[]
-    depositPos ?: Coor[]
-    powerBankPos ?: Coor[]
-    portalPos ?: Coor[]
+    sourcePos?: Coor[]
+    controllerPos?: Coor[]
+    mineralPos?: Coor[]
+    depositPos?: Coor[]
+    powerBankPos?: Coor[]
+    portalPos?: Coor[]
 }
 
 interface PowerCreep {
     work(): void
     runState(): string
     getStateData(stateName: StateConstant): StateMemoryData
-    getCurrentState():StateConstant
+    getCurrentState(): StateConstant
     getMomentStore(resourceType: string): store | number
 }
 /**
@@ -294,7 +294,7 @@ interface Creep {
     work(): void
     runState(): string
     getStateData(stateName: StateConstant): StateMemoryData
-    getCurrentState():StateConstant
+    getCurrentState(): StateConstant
     getMomentStore(resourceType: string): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
@@ -321,7 +321,19 @@ interface Creep {
     _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
 }
 
-type RoleConstant = "primitive" | "harvester" | "builder"
+type BaseRoleConstant = "primitive" | "harvester" | "builder" | "hauler" | "distributer"
+
+// 爆破手(拆迁) 治疗者 执行官(近战) 潜行者(一体机) 重炮手
+type WarRoleConstant = "blaster" | "healer" | "executer" | "stalker" | "gunner"
+
+type RoleConstant = BaseRoleConstant | WarRoleConstant
+
+interface IRoleConfig {
+    emit(creep: Creep): {
+        newState : StateConstant
+        data : StateData
+    }
+}
 
 type GroupConstant = "primitive" | "build" | "harvest"
 
@@ -342,9 +354,9 @@ type GroupRoleConfig = {
 }
 
 interface GroupInitData {
-    room : string
-    sourceID ?: string
-    sourcePos ?: Pos
+    room: string
+    sourceID?: string
+    sourcePos?: Pos
 }
 
 interface GroupRoleData {
@@ -353,13 +365,13 @@ interface GroupRoleData {
 }
 
 interface IGroupConfig {
-    init(name:string,data:GroupInitData): void
+    init(name: string, data: GroupInitData): void
     update(): void
 }
 
 interface SpawnConfig {
-    body : BodyPartConstant[]
-    name : string
-    memory : CreepMemory
-    priority : number
+    body: BodyPartConstant[]
+    name: string
+    memory: CreepMemory
+    priority: number
 }

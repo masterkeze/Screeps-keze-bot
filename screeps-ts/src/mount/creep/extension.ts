@@ -1,4 +1,5 @@
 import states from 'state'
+import roles from 'role'
 import { Moment } from 'modules/moment'
 import { Lock } from 'modules/lock'
 import { Helper } from 'helper'
@@ -29,10 +30,17 @@ export default class CreepExtension extends Creep {
                 return;
             }
         }
-
         // 执行当前状态
-        let newState: string = this.runCurrentState();
-
+        let stateContinue: StateContinue = this.runCurrentState();
+        while (stateContinue == StateContinue.Exit){
+            let roleConfig:IRoleConfig = roles[this.memory.role]();
+            let {newState,data} = roleConfig.emit(this);
+            this.transiteState(newState,data);
+            if (newState == "idle"){
+                break;
+            }
+            stateContinue = this.runCurrentState();
+        }
     }
     /**
      * 返回moment 储量
@@ -113,25 +121,36 @@ export default class CreepExtension extends Creep {
 
     public getStateData(state: string): StateMemoryData {
         if (!this.memory.state) {
-            this.memory.state = { currentState: "", data: {} };
+            this.memory.state = { currentState: "idle", data: {} };
         }
         return this.memory.state.data[state];
     }
 
     public getCurrentState(): StateConstant {
         if (!this.memory.state) {
-            this.memory.state = { currentState: "", data: {} };
+            this.memory.state = { currentState: "idle", data: {} };
         }
         let currentState = this.memory.state.currentState as StateConstant;
         if (!currentState) {
-            return "";
+            return "idle";
         } else {
             return currentState;
         }
     }
 
-    public runCurrentState():StateConstant {
+    public setCurrentState(state:StateConstant): void {
+        if (!this.memory.state) {
+            this.memory.state = { currentState: state, data: {} };
+        } else {
+            this.memory.state.currentState = state;
+        }
+    }
+
+    public runCurrentState():StateContinue {
         let currentState = this.getCurrentState();
+        if (currentState == "idle"){
+            return StateContinue.Exit;
+        }
         let stateConfig: IStateConfig = states[currentState]();
         let actions = stateConfig.actions;
         let actionNames: ActionConstant[] = Object.keys(actions) as ActionConstant[];
@@ -148,10 +167,21 @@ export default class CreepExtension extends Creep {
             }
         }
 
-        if (stateContinue == StateContinue.Continue) {
-            return currentState;
+        return stateContinue;
+    }
+
+    public transiteState(newState:StateConstant, data:StateData) {
+        let currentState = this.getCurrentState();
+        if (currentState){
+            let stateConfig: IStateConfig = states[currentState]();
+            stateConfig.onExit(this);
+        }
+        if (newState){
+            this.setCurrentState(newState);
+            let newStateConfig: IStateConfig = states[newState]();
+            newStateConfig.onEnter(this,data);
         } else {
-            return "";
+            this.setCurrentState("idle");
         }
     }
 

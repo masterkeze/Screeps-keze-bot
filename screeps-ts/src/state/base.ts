@@ -1,5 +1,3 @@
-import { stat } from "fs";
-
 /**
  * 基础状态机
  */
