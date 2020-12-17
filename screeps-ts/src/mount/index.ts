@@ -1,5 +1,7 @@
+import mountBuildingCache from 'modules/buildingCache'
 import mountCreep from './creep'
 import mountStructures from './structures'
+
 /**
  * 挂载所有的属性和方法
  */
@@ -11,6 +13,7 @@ export function mount (): void {
         // 挂载前置工作
         workBeforeMount();
         // mount packeges
+        mountBuildingCache();
         mountCreep();
         mountStructures();
         // 挂载完成后工作

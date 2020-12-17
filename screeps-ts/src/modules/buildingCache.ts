@@ -110,210 +110,214 @@ function Hub(room) {
     local[room.name] = this;
 }
 
-Room.prototype.__proto__ = new Proxy({}, {
-    get(cache, id) {
-        return Game.getObjectById(id);
-    }
-});
-
-singleList.forEach((type) => {
-    let bindstring = '_' + type;
-    Object.defineProperty(Room.prototype, type, {
-        get: function () {
-            if (bindstring in this) {
-                return this[bindstring];
-            } else {
-                let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
-                if (cache) {
-                    //console.log(type);
-                    return this[bindstring] = Game.getObjectById(cache);
-                } else {
-                    return this[bindstring] = undefined;
-                }
-            }
-        },
-        set: function () {
-        },
-        enumerable: false,
-        configurable: true
+export default () => {
+    Room.prototype.__proto__ = new Proxy({}, {
+        get(cache, id) {
+            return Game.getObjectById(id);
+        }
     });
-})
 
-multipleList.forEach((type) => {
-    let bindstring = '_' + type;
-    Object.defineProperty(Room.prototype, type, {
-        get: function () {
-            if (bindstring in this) {
-                return this[bindstring];
-            } else {
-                /**@type {Set<string>} */
-                let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
-                this[bindstring] = [];
-                if (cache) {
-                    for (let id of cache) {
-                        let o = Game.getObjectById(id);
-                        if (o) {
-                            this[bindstring].push(o);
-                        } else {
-                            cache.delete(id);
-                        }
-                    }
-                }
-                return this[bindstring];
-            }
-        },
-        set: function () {
-        },
-        enumerable: false,
-        configurable: true
-    })
-})
-
-additionalList.forEach((type) => {
-    let bindstring = '_' + type;
-    Object.defineProperty(Room.prototype, type, {
-        get: function () {
-            ////console.log('in add');
-            if (bindstring in this) {
-                return this[bindstring];
-            } else {
-                let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
-                this[bindstring] = [];
-                if (cache) {
-                    //console.log(type);
-                    for (let id of cache) {
-                        let o = Game.getObjectById(id);
-                        if (o) {
-                            this[bindstring].push(o);
-                        } else {
-                            cache.delete(id);
-                        }
-                    }
-                }
-                return this[bindstring];
-            }
-        },
-        set: function () {
-        },
-        enumerable: false,
-        configurable: true
-    })
-})
-
-Room.prototype.updateCache = function (type) {
-    if (!type || !local[this.name]) {   // 更新全部
-        new Hub(this);
-    } else if (type) {
-        // 指定更新一种建筑
-        let cache = local[this.name];
-        if (additionalList.has(type)) {
-            let objects = this.lookForAtArea(type, 1, 1, 49, 49, true);
-            if (objects.length) {
-                cache[type] = new Set(objects.map((o) => {
-                    return o[type].id;
-                }));
-            } else {
-                cache[type] = undefined;
-            }
-        } else if (type == 'mass_stores') {
-            this.updateCache(STRUCTURE_CONTAINER);
-            this.updateCache(STRUCTURE_FACTORY);
-            cache.mass_stores = new Set();
-            if (this.storage) {
-                cache.mass_stores.add(this.storage.id);
-            }
-            if (this.terminal) {
-                cache.mass_stores.add(this.terminal.id);
-            }
-            if (this[STRUCTURE_FACTORY]) {
-                cache.mass_stores.add(this[STRUCTURE_FACTORY].id);
-            }
-            if (this[STRUCTURE_CONTAINER].length) {
-                this[STRUCTURE_CONTAINER].forEach((cont) => {
-                    cache.mass_stores.add(cont.id);
-                });
-            }
-        } else {
-            let objects = this.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == type
-            });
-            if (objects.length) {
-                if (singleList.has(type)) {
-                    cache[type] = objects[0].id;
+    singleList.forEach((type) => {
+        let bindstring = '_' + type;
+        Object.defineProperty(Room.prototype, type, {
+            get: function () {
+                if (bindstring in this) {
+                    return this[bindstring];
                 } else {
-                    cache[type] = new Set(objects.map((s) => {
-                        return s.id;
+                    let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
+                    if (cache) {
+                        //console.log(type);
+                        return this[bindstring] = Game.getObjectById(cache);
+                    } else {
+                        return this[bindstring] = undefined;
+                    }
+                }
+            },
+            set: function () {
+            },
+            enumerable: false,
+            configurable: true
+        });
+    })
+
+    multipleList.forEach((type) => {
+        let bindstring = '_' + type;
+        Object.defineProperty(Room.prototype, type, {
+            get: function () {
+                if (bindstring in this) {
+                    return this[bindstring];
+                } else {
+                    /**@type {Set<string>} */
+                    let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
+                    this[bindstring] = [];
+                    if (cache) {
+                        for (let id of cache) {
+                            let o = Game.getObjectById(id);
+                            if (o) {
+                                this[bindstring].push(o);
+                            } else {
+                                cache.delete(id);
+                            }
+                        }
+                    }
+                    return this[bindstring];
+                }
+            },
+            set: function () {
+            },
+            enumerable: false,
+            configurable: true
+        })
+    })
+
+    additionalList.forEach((type) => {
+        let bindstring = '_' + type;
+        Object.defineProperty(Room.prototype, type, {
+            get: function () {
+                ////console.log('in add');
+                if (bindstring in this) {
+                    return this[bindstring];
+                } else {
+                    let cache = local[this.name] ? local[this.name][type] : new Hub(this)[type];
+                    this[bindstring] = [];
+                    if (cache) {
+                        //console.log(type);
+                        for (let id of cache) {
+                            let o = Game.getObjectById(id);
+                            if (o) {
+                                this[bindstring].push(o);
+                            } else {
+                                cache.delete(id);
+                            }
+                        }
+                    }
+                    return this[bindstring];
+                }
+            },
+            set: function () {
+            },
+            enumerable: false,
+            configurable: true
+        })
+    })
+
+    Room.prototype.updateCache = function (type) {
+        if (!type || !local[this.name]) {   // 更新全部
+            new Hub(this);
+        } else if (type) {
+            // 指定更新一种建筑
+            let cache = local[this.name];
+            if (additionalList.has(type)) {
+                let objects = this.lookForAtArea(type, 1, 1, 49, 49, true);
+                if (objects.length) {
+                    cache[type] = new Set(objects.map((o) => {
+                        return o[type].id;
                     }));
+                } else {
+                    cache[type] = undefined;
+                }
+            } else if (type == 'mass_stores') {
+                this.updateCache(STRUCTURE_CONTAINER);
+                this.updateCache(STRUCTURE_FACTORY);
+                cache.mass_stores = new Set();
+                if (this.storage) {
+                    cache.mass_stores.add(this.storage.id);
+                }
+                if (this.terminal) {
+                    cache.mass_stores.add(this.terminal.id);
+                }
+                if (this[STRUCTURE_FACTORY]) {
+                    cache.mass_stores.add(this[STRUCTURE_FACTORY].id);
+                }
+                if (this[STRUCTURE_CONTAINER].length) {
+                    this[STRUCTURE_CONTAINER].forEach((cont) => {
+                        cache.mass_stores.add(cont.id);
+                    });
                 }
             } else {
-                cache[type] = undefined;
+                let objects = this.find(FIND_STRUCTURES, {
+                    filter: (s) => s.structureType == type
+                });
+                if (objects.length) {
+                    if (singleList.has(type)) {
+                        cache[type] = objects[0].id;
+                    } else {
+                        cache[type] = new Set(objects.map((s) => {
+                            return s.id;
+                        }));
+                    }
+                } else {
+                    cache[type] = undefined;
+                }
             }
         }
     }
-}
 
-Object.defineProperty(Room.prototype, 'mass_stores', {
-    get: function () {
-        if ('_mass_stores' in this) {
-            return this._mass_stores;
-        } else {
-            let cache = local[this.name] ? local[this.name].mass_stores : new Hub(this).mass_stores;
-            this._mass_stores = [];
-            for (let id of cache) {
-                let o = Game.getObjectById(id);
-                if (o) {
-                    this._mass_stores.push(o);
-                } else {
-                    cache.delete(id);
-                }
-            }
-            return this._mass_stores;
-        }
-    },
-    set: function () {
-    },
-    enumerable: false,
-    configurable: true
-})
-
-Object.defineProperty(Room.prototype, 'my', {
-    get: function () {
-        return this.controller && this.controller.my;
-    },
-    set: function () {
-    },
-    enumerable: false,
-    configurable: true
-})
-
-Object.defineProperty(Room.prototype, 'level', {
-    get: function () {
-        return this.controller && this.controller.level;
-    },
-    set: function () {
-    },
-    enumerable: false,
-    configurable: true
-})
-
-for (let type of RESOURCES_ALL) {
-    let last_fetch_time = 0;
-    let sum;
-    let reduce_f = function (temp_sum, s) {
-        return temp_sum + s.store[type];
-    };
-    Object.defineProperty(Room.prototype, type, {
+    Object.defineProperty(Room.prototype, 'mass_stores', {
         get: function () {
-            if (last_fetch_time < Game.time) {
-                return sum = this.mass_stores.reduce(reduce_f, 0);
+            if ('_mass_stores' in this) {
+                return this._mass_stores;
             } else {
-                return sum;
+                let cache = local[this.name] ? local[this.name].mass_stores : new Hub(this).mass_stores;
+                this._mass_stores = [];
+                for (let id of cache) {
+                    let o = Game.getObjectById(id);
+                    if (o) {
+                        this._mass_stores.push(o);
+                    } else {
+                        cache.delete(id);
+                    }
+                }
+                return this._mass_stores;
             }
         },
-        set: function (amount) {
-            sum = amount;
+        set: function () {
         },
         enumerable: false,
         configurable: true
     })
+
+    Object.defineProperty(Room.prototype, 'my', {
+        get: function () {
+            return this.controller && this.controller.my;
+        },
+        set: function () {
+        },
+        enumerable: false,
+        configurable: true
+    })
+
+    Object.defineProperty(Room.prototype, 'level', {
+        get: function () {
+            return this.controller && this.controller.level;
+        },
+        set: function () {
+        },
+        enumerable: false,
+        configurable: true
+    })
+
+    for (let type of RESOURCES_ALL) {
+        let last_fetch_time = 0;
+        let sum;
+        let reduce_f = function (temp_sum, s) {
+            return temp_sum + s.store[type];
+        };
+        Object.defineProperty(Room.prototype, type, {
+            get: function () {
+                if (last_fetch_time < Game.time) {
+                    return sum = this.mass_stores.reduce(reduce_f, 0);
+                } else {
+                    return sum;
+                }
+            },
+            set: function (amount) {
+                sum = amount;
+            },
+            enumerable: false,
+            configurable: true
+        })
+    }
 }
+
+
