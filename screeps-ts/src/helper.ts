@@ -1,6 +1,10 @@
 import { PriorityQueue } from 'modules/priorityQueue'
 
 export namespace Helper {
+    export function getBodyArray(bodyString: string): BodyPartConstant[] {
+        let output:BodyPartConstant[] = [];
+        return output;
+    }
     export function storeAdd(store1: store, store2: store): store {
         let output: store;
         Object.keys(store1).forEach(resourceType => {
@@ -57,7 +61,7 @@ export namespace Helper {
     export function getUniqueNameForCreep(creepName: string): string {
         let baseCreepName = creepName;
         let newCreepName = baseCreepName;
-        while (Game.creeps[newCreepName]){
+        while (Game.creeps[newCreepName]) {
             newCreepName += String.fromCharCode(Math.floor(Math.random() * 65535));
         }
         return newCreepName;

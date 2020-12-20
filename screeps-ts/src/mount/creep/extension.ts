@@ -38,23 +38,6 @@ export default class CreepExtension extends Creep {
         }
     }
     /**
-     * 返回moment 储量
-     * @param  {string} resourceType
-     * @returns 如果传了resourceType，则返回具体的数值，否则返回store
-     */
-    public getMomentStore(resourceType?: string): store | number {
-        let moment = Moment.get(this.id);
-        if (resourceType) {
-            let momentStore = moment.resourcesChange[resourceType];
-            let actualStore = this.store[resourceType];
-            if (!momentStore) momentStore = 0;
-            if (!actualStore) actualStore = 0;
-            return momentStore + actualStore;
-        } else {
-            return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(this.store)) as store);
-        }
-    }
-    /**
      * 返回上锁的储量
      * @param  {string} resourceType?
      * @returns 如果传了resourceType，则返回具体的数值，否则返回store
@@ -244,6 +227,7 @@ export default class CreepExtension extends Creep {
     public transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode {
         let returnCode = this._transfer(target, resourceType, amount);
         if (returnCode == OK) {
+            Moment.setAction(this.id,"transfer");
             let delta: number = 0;
             if (amount) {
                 delta = amount;
@@ -255,6 +239,22 @@ export default class CreepExtension extends Creep {
             storeChange[resourceType] = delta;
             Moment.setStoreChange(this.id, "out", storeChange);
             Moment.setStoreChange(target.id, "in", storeChange);
+        }
+        return returnCode;
+    }
+    /**
+     * upgrade成功时记录到Moment中，动作注册
+     * @param  {StructureController} target
+     */
+    public upgradeController(target: StructureController): ScreepsReturnCode {
+        let returnCode = this._upgradeController(target);
+        if (returnCode == OK){
+            Moment.setAction(this.id,"upgradeController");
+            // 先不考虑boost
+            let delta = Math.min(this.store[RESOURCE_ENERGY],this.getActiveBodyparts(WORK));
+            let storeChange: store = {};
+            storeChange[RESOURCE_ENERGY] = delta;
+            Moment.setStoreChange(this.id, "out", storeChange);
         }
         return returnCode;
     }

@@ -14,18 +14,18 @@ const states: {
         },
         onExit(creep: Creep): void { }
     }),
-    upgrade: (): IStateConfig => ({
+    upgradeUntilEmpty: (): IStateConfig => ({
         onEnter(creep: Creep, data: StateData_upgrade): void {
             data.range = 3;
             reachOnEnter(creep, data);
         },
         actions: {
             moveTo: reachAction,
-            upgrade(creep: Creep): StateContinue {
+            upgradeController(creep: Creep): StateContinue {
                 if (creep.store.energy == 0) {
                     return StateContinue.Exit;
                 }
-                let stateData = creep.getStateData(creep.getCurrentState());
+                let stateData = creep.getCurrentStateData();
                 if (creep.pos.roomName == stateData.targetPos.roomName) {
                     if (!stateData.controllerID) {
                         let targetPos = new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName);
@@ -42,9 +42,9 @@ const states: {
                     // 执行
                     creep.upgradeController(controller);
                     if (creep.getActiveBodyparts(WORK) >= creep.store.energy) {
-                        return StateContinue.ExcutedAndExit;
+                        return StateContinue.Exit;
                     } else {
-                        return StateContinue.ExcutedAndContinue;
+                        return StateContinue.Continue;
                     }
                 } else {
                     return StateContinue.Continue;
@@ -53,7 +53,7 @@ const states: {
         },
         onExit(creep: Creep): void { }
     }),
-    harvest: (): IStateConfig => ({
+    harvestUntilFull: (): IStateConfig => ({
         onEnter(creep: Creep, data: StateData_harvest): void {
             data.range = 1;
             reachOnEnter(creep, data);
@@ -65,7 +65,7 @@ const states: {
                 if (creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
                     return StateContinue.Exit;
                 }
-                let stateData = creep.getStateData(creep.getCurrentState());
+                let stateData = creep.getCurrentStateData();
                 if (creep.pos.roomName == stateData.targetPos.roomName) {
                     if (!stateData.sourceID) {
                         let targetPos = new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName);
@@ -91,9 +91,9 @@ const states: {
                     let retCode = creep.harvest(source);
                     if (retCode == ERR_NOT_OWNER){
                         // 取消外矿任务 或派出 claimer 或其他
-                        return StateContinue.ExcutedAndExit;
+                        return StateContinue.Exit;
                     }
-                    return StateContinue.ExcutedAndContinue;
+                    return StateContinue.Continue;
                 } else {
                     return StateContinue.Continue;
                 }
@@ -130,7 +130,7 @@ function getStructureIdAt(pos: RoomPosition, structureType: StructureConstant): 
 }
 
 function reachOnEnter(creep: Creep, data: StateData_reach): void {
-    let stateData = creep.getStateData(creep.getCurrentState());
+    let stateData = creep.getCurrentStateData();
 
     if (data.targetPos instanceof RoomPosition) {
         stateData.targetPos = {
@@ -153,7 +153,7 @@ function reachOnEnter(creep: Creep, data: StateData_reach): void {
 }
 
 function reachAction(creep: Creep | PowerCreep): StateContinue {
-    let stateData = creep.getStateData(creep.getCurrentState());
+    let stateData = creep.getCurrentStateData();
     if (creep.pos.roomName == stateData.targetPos.roomName) {
         if (creep.pos.inRangeTo(stateData.targetPos.x, stateData.targetPos.y, stateData.range)) {
             return StateContinue.Exit;
@@ -161,5 +161,5 @@ function reachAction(creep: Creep | PowerCreep): StateContinue {
     }
     creep.moveTo(new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName), { range: stateData.range });
     creep.room.visual.line(creep.pos.x, creep.pos.y, stateData.targetPos.x, stateData.targetPos.y);
-    return StateContinue.ExcutedAndContinue;
+    return StateContinue.Continue;
 }

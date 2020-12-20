@@ -1,8 +1,8 @@
 import { Helper } from 'helper'
 
-const Aconfliction = new Set(["harvest", "attack", "build", "repair", "dismantle", "attackController", "rangedHeal", "heal"]);
+const Aconfliction = new Set(["attack", "harvest", "build", "repair", "dismantle", "attackController", "rangedHeal", "heal"]);
 const Rconfliction = new Set(["rangedAttack", "rangedMassAttack", "build", "repair", "rangedHeal"]);
-const Mconfliction = new Set(["move","moveTo","moveByPath"]);
+const Mconfliction = new Set(["move", "moveTo", "moveByPath"]);
 
 export namespace Moment {
     /**
@@ -89,9 +89,9 @@ export namespace Moment {
         let currentSet = new Set(moment.actions);
         if (currentSet.has(key)) return ERR_BUSY;
         currentSet = currentSet.add(key);
-        if (Helper.intersection(currentSet,Aconfliction).size > 1) return ERR_BUSY;
-        if (Helper.intersection(currentSet,Rconfliction).size > 1) return ERR_BUSY;
-        if (Helper.intersection(currentSet,Mconfliction).size > 1) return ERR_BUSY;
+        if (Helper.intersection(currentSet, Aconfliction).size > 1) return ERR_BUSY;
+        if (Helper.intersection(currentSet, Rconfliction).size > 1) return ERR_BUSY;
+        if (Helper.intersection(currentSet, Mconfliction).size > 1) return ERR_BUSY;
         moment.actions.push(key);
         return OK;
     }
@@ -106,9 +106,93 @@ export namespace Moment {
         let currentSet = new Set(moment.actions);
         if (currentSet.has(key)) return false;
         currentSet = currentSet.add(key);
-        if (Helper.intersection(currentSet,Aconfliction).size > 1) return false;
-        if (Helper.intersection(currentSet,Rconfliction).size > 1) return false;
-        if (Helper.intersection(currentSet,Mconfliction).size > 1) return false;
+        if (Helper.intersection(currentSet, Aconfliction).size > 1) return false;
+        if (Helper.intersection(currentSet, Rconfliction).size > 1) return false;
+        if (Helper.intersection(currentSet, Mconfliction).size > 1) return false;
         return true;
+    }
+    export function load(): void {
+        /**
+         * 返回moment 储量
+         * @param  {string} resourceType
+         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+         */
+        Creep.prototype.getMomentStore = function (resourceType?: string): store | number {
+            let me = this as Creep;
+            let moment = Moment.get(me.id);
+            if (resourceType) {
+                let momentStore = moment.resourcesChange[resourceType];
+                let actualStore = me.store[resourceType];
+                if (!momentStore) momentStore = 0;
+                if (!actualStore) actualStore = 0;
+                return momentStore + actualStore;
+            } else {
+                return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(me.store)) as store);
+            }
+        }
+        /**
+         * 返回moment 储量
+         * @param  {string} resourceType
+         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+         */
+        PowerCreep.prototype.getMomentStore = function (resourceType?: string): store | number {
+            let me = this as Creep;
+            let moment = Moment.get(me.id);
+            if (resourceType) {
+                let momentStore = moment.resourcesChange[resourceType];
+                let actualStore = me.store[resourceType];
+                if (!momentStore) momentStore = 0;
+                if (!actualStore) actualStore = 0;
+                return momentStore + actualStore;
+            } else {
+                return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(me.store)) as store);
+            }
+        }
+        /**
+         * 返回moment 储量
+         * @param  {string} resourceType
+         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+         */
+        Structure.prototype.getMomentStore = function (resourceType?: string): store | number {
+            let structure = this as Structure;
+            let moment = Moment.get(structure.id);
+            let me = this as IHasStore;
+            if (resourceType) {
+                let momentStore = moment.resourcesChange[resourceType];
+                let actualStore = me.store[resourceType];
+                if (!momentStore) momentStore = 0;
+                if (!actualStore) actualStore = 0;
+                return momentStore + actualStore;
+            } else {
+                return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(me.store)) as store);
+            }
+        }
+        /**
+         * 返回source 当前剩余能量
+         */
+        Source.prototype.getMomentStore = function (): number {
+            let me = this as Source;
+            let moment = Moment.get(me.id);
+            let momentStore = moment.resourcesChange[RESOURCE_ENERGY];
+            let actualStore = me.energy;
+            if (!momentStore) momentStore = 0;
+            if (!actualStore) actualStore = 0;
+            return momentStore + actualStore;
+        }
+        /**
+         * 返回mineral 当前剩余矿物储量
+         */
+        Mineral.prototype.getMomentStore = function (): number {
+            let me = this as Mineral;
+            let mineralType = me.mineralType;
+            let moment = Moment.get(me.id);
+            let momentStore = moment.resourcesChange[mineralType];
+            let actualStore = me.mineralAmount;
+            if (!momentStore) momentStore = 0;
+            if (!actualStore) actualStore = 0;
+            return momentStore + actualStore;
+        }
+
+        
     }
 }

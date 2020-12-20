@@ -154,7 +154,7 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgrade' | 'harvest'// | 'transfer' | 'withdraw' | 'build' // | 'withdrawOnce'
+type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'distribute' | 'centerTransfer' | 'withdrawMulti' | 'transferMulti'
 type IdleState = "idle"
 type StateConstant = BaseStateConstant | IdleState
 type StateExport = {
@@ -167,8 +167,6 @@ type StateExport = {
 declare enum StateContinue {
     Exit = 0,
     Continue = 1,
-    ExcutedAndExit = 2,
-    ExcutedAndContinue = 3
 }
 
 /**
@@ -258,10 +256,6 @@ interface Memory {
     group?: GroupCollection
 }
 
-interface PowerCreep {
-    work(): void
-}
-
 interface Room {
     work(): void
     getSpawnQueue(): SpawnConfig[]
@@ -277,6 +271,7 @@ interface Room {
     portal: StructurePortal[]
     lab: StructureLab[]
     deposit: Deposit[]
+    source: Source[]
     powerBank: StructurePowerBank[]
     extractor: StructureExtractor
     observer: StructureObserver
@@ -303,7 +298,20 @@ interface PowerCreep {
     runState(): string
     getStateData(stateName: StateConstant): StateMemoryData
     getCurrentState(): StateConstant
+    getCurrentStateData(): StateMemoryData
     getMomentStore(resourceType: string): store | number
+}
+
+interface Source {
+    getMomentStore(): number
+}
+
+interface Mineral {
+    getMomentStore(): number
+}
+
+interface Structure {
+    getMomentStore(resourceType?: string): store | number
 }
 /**
  * Creep 拓展
@@ -312,6 +320,7 @@ interface Creep {
     work(): void
     runState(): string
     getStateData(stateName: StateConstant): StateMemoryData
+    getCurrentStateData(): StateMemoryData
     getCurrentState(): StateConstant
     getMomentStore(resourceType?: string): store | number
     // rewrite actions
