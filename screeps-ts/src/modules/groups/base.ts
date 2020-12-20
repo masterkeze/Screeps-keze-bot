@@ -2,8 +2,8 @@ const groupDefaultPriority : {
     [group in GroupConstant]: number 
 } = {
     primitive: 1,
-    harvest: 2,
-    build: 3
+    // harvest: 2,
+    // build: 3
 }
 
 /**
@@ -23,23 +23,23 @@ const groups: {
         }
     }),
 
-    harvest: (): IGroupConfig => ({
-        init(): void {
+    // harvest: (): IGroupConfig => ({
+    //     init(): void {
 
-        },
-        update(): void {
+    //     },
+    //     update(): void {
 
-        }
-    }),
+    //     }
+    // }),
 
-    build: (): IGroupConfig => ({
-        init(): void {
+    // build: (): IGroupConfig => ({
+    //     init(): void {
 
-        },
-        update(): void {
+    //     },
+    //     update(): void {
 
-        }
-    })
+    //     }
+    // })
 }
 
 export default groups;

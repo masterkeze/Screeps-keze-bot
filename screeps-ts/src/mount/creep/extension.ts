@@ -3,6 +3,7 @@ import roles from 'role'
 import { Moment } from 'modules/moment'
 import { Lock } from 'modules/lock'
 import { Helper } from 'helper'
+import { Group } from 'modules/group'
 const directions: string = '↑↗→↘↓↙←↖';
 // creep 原型拓展
 export default class CreepExtension extends Creep {
@@ -21,22 +22,16 @@ export default class CreepExtension extends Creep {
         }
 
         // 注册creep
-        if (this.memory.groupID) {
-            if (!this.memory.registered) {
-                this.memory.registered = this.register(this.memory.groupID);
-            }
-            if (!this.memory.registered) {
-                // log 没找到对应组
-                return;
-            }
+        if (!this.memory.registered) {
+            Group.register(this);
         }
         // 执行当前状态
         let stateContinue: StateContinue = this.runCurrentState();
-        while (stateContinue == StateContinue.Exit){
-            let roleConfig:IRoleConfig = roles[this.memory.role]();
-            let {newState,data} = roleConfig.emit(this);
-            this.transiteState(newState,data);
-            if (newState == "idle"){
+        while (stateContinue == StateContinue.Exit) {
+            let roleConfig: IRoleConfig = roles[this.memory.role]();
+            let { newState, data } = roleConfig.emit(this);
+            this.transiteState(newState, data);
+            if (newState == "idle") {
                 break;
             }
             stateContinue = this.runCurrentState();
@@ -114,18 +109,20 @@ export default class CreepExtension extends Creep {
         // 加锁
         return Lock.add(this.id, name, store);
     }
-
-    public register(groupID: string): number {
-        return 1;
-    }
-
+    /**
+     * 获得特定state的存储信息
+     * @param  {string} state
+     * @returns returnthis
+     */
     public getStateData(state: string): StateMemoryData {
         if (!this.memory.state) {
             this.memory.state = { currentState: "idle", data: {} };
         }
         return this.memory.state.data[state];
     }
-
+    /**
+     * 获得当前处于的状态，默认为idel
+     */
     public getCurrentState(): StateConstant {
         if (!this.memory.state) {
             this.memory.state = { currentState: "idle", data: {} };
@@ -137,18 +134,31 @@ export default class CreepExtension extends Creep {
             return currentState;
         }
     }
-
-    public setCurrentState(state:StateConstant): void {
+    /**
+     * 获取当前状态对应的存储信息
+     */
+    public getCurrentStateData(): StateMemoryData {
+        return this.getStateData(this.getCurrentState());
+    }
+    /**
+     * 手动设置当前状态
+     * @param  {StateConstant} state
+     */
+    public setCurrentState(state: StateConstant): void {
         if (!this.memory.state) {
             this.memory.state = { currentState: state, data: {} };
         } else {
             this.memory.state.currentState = state;
         }
     }
-
-    public runCurrentState():StateContinue {
+    /**
+     * 执行当前的状态的所有action
+     * 会检测这个state下所有的action与已经安排的action是否有冲突
+     * 当且仅当所有的action都没有冲突，且所有的action都返回StateContinue.Exit时，说明该状态已完结。
+     */
+    public runCurrentState(): StateContinue {
         let currentState = this.getCurrentState();
-        if (currentState == "idle"){
+        if (currentState == "idle") {
             return StateContinue.Exit;
         }
         let stateConfig: IStateConfig = states[currentState]();
@@ -156,7 +166,7 @@ export default class CreepExtension extends Creep {
         let actionNames: ActionConstant[] = Object.keys(actions) as ActionConstant[];
         let stateContinue: StateContinue = StateContinue.Exit;
         for (const actionName of actionNames) {
-            if (Moment.setAction(this.id, actionName) == OK) {
+            if (Moment.testAction(this.id, actionName)) {
                 let action = actions[actionName];
                 let actionReturnCode = action(this);
                 if (actionReturnCode == StateContinue.Continue) {
@@ -166,53 +176,85 @@ export default class CreepExtension extends Creep {
                 stateContinue = StateContinue.Continue;
             }
         }
-
         return stateContinue;
     }
-
-    public transiteState(newState:StateConstant, data:StateData) {
+    /**
+     * 状态转移，从currentState转移到指定的新state，会依次调用老状态的onExit和新状态的onEnter
+     * @param  {StateConstant} newState
+     * @param  {StateData} data
+     */
+    public transiteState(newState: StateConstant, data: StateData) {
         let currentState = this.getCurrentState();
-        if (currentState){
+        if (currentState) {
             let stateConfig: IStateConfig = states[currentState]();
             stateConfig.onExit(this);
         }
-        if (newState){
+        if (newState) {
             this.setCurrentState(newState);
             let newStateConfig: IStateConfig = states[newState]();
-            newStateConfig.onEnter(this,data);
+            newStateConfig.onEnter(this, data);
         } else {
             this.setCurrentState("idle");
         }
     }
-
+    /**
+     * say 方向，动作注册
+     * @param  {DirectionConstant|Creep} target
+     */
     public move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS {
         if (target instanceof Creep) {
 
         } else {
             this.say(directions[target - 1], true);
         }
-        return this._move(target);
+        let retCode = this._move(target);
+        if (retCode == OK) Moment.setAction(this.id, "move");
+        return retCode;
     }
     /**
-     * withdraw成功时记录到moment中
+     * withdraw成功时记录到moment中，动作注册
      * @param  {Structure|Tombstone|Ruin} target
      * @param  {ResourceConstant} resourceType
      * @param  {number} amount?
      */
-    public withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode{
-        let returnCode = this._withdraw(target,resourceType,amount);
-        if (returnCode == OK){
-            let delta:number = 0;
-            if (amount){
+    public withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode {
+        let returnCode = this._withdraw(target, resourceType, amount);
+        if (returnCode == OK) {
+            Moment.setAction(this.id,"withdraw");
+            let delta: number = 0;
+            if (amount) {
                 delta = amount;
-            }else{
+            } else {
                 let targetStore = target as IHasStore;
-                delta = Math.min(this.store.getFreeCapacity(resourceType),targetStore.store[resourceType]);
+                delta = Math.min(this.store.getFreeCapacity(resourceType), targetStore.store[resourceType]);
             }
-            let storeChange:store = {};
+            let storeChange: store = {};
             storeChange[resourceType] = delta;
-            Moment.setStoreChange(this.id,"in",storeChange);
-            Moment.setStoreChange(target.id,"out",storeChange);
+            Moment.setStoreChange(this.id, "in", storeChange);
+            Moment.setStoreChange(target.id, "out", storeChange);
+        }
+        return returnCode;
+    }
+    /**
+     * transfer成功时记录到Moment中，动作注册
+     * @param  {AnyCreep|Structure} target
+     * @param  {ResourceConstant} resourceType
+     * @param  {number} amount?
+     */
+    public transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode {
+        let returnCode = this._transfer(target, resourceType, amount);
+        if (returnCode == OK) {
+            let delta: number = 0;
+            if (amount) {
+                delta = amount;
+            } else {
+                let targetStore = target as IHasStore;
+                delta = Math.min(targetStore.store.getFreeCapacity(resourceType), this.store[resourceType]);
+            }
+            let storeChange: store = {};
+            storeChange[resourceType] = delta;
+            Moment.setStoreChange(this.id, "out", storeChange);
+            Moment.setStoreChange(target.id, "in", storeChange);
         }
         return returnCode;
     }

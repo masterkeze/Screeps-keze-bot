@@ -20,7 +20,7 @@ interface IHasStore {
 }
 
 // 所有记录的动作
-type ActionConstant = "harvest" | "attack" | "build" | "repair" | "dismantle" | "attackController" | "rangedHeal" | "heal" | "rangedAttack" | "rangedMassAttack" | "move" | "moveTo" | "moveByPath" | "upgrade" | "other"
+type ActionConstant = WorkActionConstant | CarryActionConstant | MoveActionConstant | AttackActionConstant | RangedAttackActionConstant | HealActionConstant | ClaimActionConstant
 
 // work相关动作
 type WorkActionConstant = "build" | "dismantle" | "harvest" | "repair" | "upgradeController"
@@ -138,16 +138,23 @@ interface SendTaskData extends TaskData {
 }
 
 /**
+ * Room Memory结构
+ */
+interface RoomMemory {
+
+}
+
+/**
  * Creep Memory结构
  */
 interface CreepMemory {
     role: string
-    groupID?: string
+    groupID: string
     registered?: number
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgrade'// | 'withdrawOnce'
+type BaseStateConstant = 'reach' | 'upgrade' | 'harvest'// | 'transfer' | 'withdraw' | 'build' // | 'withdrawOnce'
 type IdleState = "idle"
 type StateConstant = BaseStateConstant | IdleState
 type StateExport = {
@@ -155,11 +162,13 @@ type StateExport = {
 }
 
 /**
- * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态
+ * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态 2 : 执行后结束 3 : 执行后继续
  */
 declare enum StateContinue {
     Exit = 0,
-    Continue = 1
+    Continue = 1,
+    ExcutedAndExit = 2,
+    ExcutedAndContinue = 3
 }
 
 /**
@@ -209,6 +218,7 @@ interface StateMemoryData {
     sourcePos?: Pos
     range?: number
     controllerID?: string
+    harvestMode?: number
 }
 
 /**
@@ -220,7 +230,15 @@ interface StateData {
 }
 interface StateData_withdrawOnce extends StateData { }
 interface StateData_upgrade extends StateData_reach {
-    controllerID: string
+    controllerID?: string
+}
+/**
+ * mode: 0 (default) exit when creep is full
+ * mode: 1, exit when harvest rate is larger than generate rate
+ */
+interface StateData_harvest extends StateData_reach {
+    mode?: number
+    sourceID?: string
 }
 interface StateData_reach extends StateData { }
 
@@ -295,7 +313,7 @@ interface Creep {
     runState(): string
     getStateData(stateName: StateConstant): StateMemoryData
     getCurrentState(): StateConstant
-    getMomentStore(resourceType: string): store | number
+    getMomentStore(resourceType?: string): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode
@@ -321,7 +339,7 @@ interface Creep {
     _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
 }
 
-type BaseRoleConstant = "primitive" | "harvester" | "builder" | "hauler" | "distributer"
+type BaseRoleConstant = "primitive" //| "harvester" | "builder" | "hauler" | "distributer"
 
 // 爆破手(拆迁) 治疗者 执行官(近战) 潜行者(一体机) 重炮手
 type WarRoleConstant = "blaster" | "healer" | "executer" | "stalker" | "gunner"
@@ -330,12 +348,12 @@ type RoleConstant = BaseRoleConstant | WarRoleConstant
 
 interface IRoleConfig {
     emit(creep: Creep): {
-        newState : StateConstant
-        data : StateData
+        newState: StateConstant
+        data: StateData
     }
 }
 
-type GroupConstant = "primitive" | "build" | "harvest"
+type GroupConstant = "primitive" //| "build" | "harvest"
 
 interface GroupCollection {
     [name: string]: GroupData

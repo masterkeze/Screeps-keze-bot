@@ -95,4 +95,20 @@ export namespace Moment {
         moment.actions.push(key);
         return OK;
     }
+    /**
+     * 测试要执行的动作是否和已注册的动作冲突，返回true/false
+     * @param  {string} objectID
+     * @param  {ActionConstant} key
+     * @returns true/false
+     */
+    export function testAction(objectID: string, key: ActionConstant): boolean {
+        let moment = get(objectID);
+        let currentSet = new Set(moment.actions);
+        if (currentSet.has(key)) return false;
+        currentSet = currentSet.add(key);
+        if (Helper.intersection(currentSet,Aconfliction).size > 1) return false;
+        if (Helper.intersection(currentSet,Rconfliction).size > 1) return false;
+        if (Helper.intersection(currentSet,Mconfliction).size > 1) return false;
+        return true;
+    }
 }

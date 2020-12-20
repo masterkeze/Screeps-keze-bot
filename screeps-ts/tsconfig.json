@@ -10,7 +10,7 @@
     "include": [
         "src/**/*.ts",
         "screeps.d.ts"
-    ],
+, "src/modules/roomVisual.js"    ],
     "exclude": [
         "node_modules"
     ]

@@ -16,13 +16,12 @@ const states: {
     }),
     upgrade: (): IStateConfig => ({
         onEnter(creep: Creep, data: StateData_upgrade): void {
+            data.range = 3;
             reachOnEnter(creep, data);
-            let stateData = creep.getStateData(creep.getCurrentState());
-            stateData.range = 3;
         },
         actions: {
             moveTo: reachAction,
-            other(creep: Creep): StateContinue {
+            upgrade(creep: Creep): StateContinue {
                 if (creep.store.energy == 0) {
                     return StateContinue.Exit;
                 }
@@ -30,27 +29,22 @@ const states: {
                 if (creep.pos.roomName == stateData.targetPos.roomName) {
                     if (!stateData.controllerID) {
                         let targetPos = new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName);
-                        let founds = targetPos.lookFor(LOOK_STRUCTURES);
-                        if (founds.length == 0) {
-                            return StateContinue.Exit;
-                        }
-                        let controllerID: string = "";
-                        for (const found of founds) {
-                            if (found instanceof StructureController) {
-                                controllerID = found.id;
-                            }
-                        }
+                        let controllerID: string = getStructureIdAt(targetPos, STRUCTURE_CONTROLLER);
                         if (!controllerID) {
                             return StateContinue.Exit;
                         }
                         stateData.controllerID = controllerID;
                     }
                     let controller = Game.getObjectById(stateData.controllerID) as StructureController;
+                    if (creep.pos.getRangeTo(controller) > 3){
+                        return StateContinue.Continue;
+                    }
+                    // 执行
                     creep.upgradeController(controller);
                     if (creep.getActiveBodyparts(WORK) >= creep.store.energy) {
-                        return StateContinue.Exit;
+                        return StateContinue.ExcutedAndExit;
                     } else {
-                        return StateContinue.Continue;
+                        return StateContinue.ExcutedAndContinue;
                     }
                 } else {
                     return StateContinue.Continue;
@@ -59,9 +53,81 @@ const states: {
         },
         onExit(creep: Creep): void { }
     }),
+    harvest: (): IStateConfig => ({
+        onEnter(creep: Creep, data: StateData_harvest): void {
+            data.range = 1;
+            reachOnEnter(creep, data);
+            
+        },
+        actions: {
+            moveTo: reachAction,
+            harvest(creep: Creep): StateContinue {
+                if (creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+                    return StateContinue.Exit;
+                }
+                let stateData = creep.getStateData(creep.getCurrentState());
+                if (creep.pos.roomName == stateData.targetPos.roomName) {
+                    if (!stateData.sourceID) {
+                        let targetPos = new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName);
+                        let sourceID = getSourceIDAt(targetPos);
+                        if (!sourceID){
+                            return StateContinue.Exit;
+                        }
+                        stateData.sourceID = sourceID;
+                    }
+                    let source = Game.getObjectById(stateData.sourceID) as Source;
+                    if (creep.pos.getRangeTo(source) > 1){
+                        return StateContinue.Continue;
+                    }
+                    if (source.energy == 0){
+                        return StateContinue.Exit;
+                    }
+                    if (stateData.harvestMode == 1){
+                        if ((source.energy/source.ticksToRegeneration) < creep.getActiveBodyparts(WORK)*2){
+                            return StateContinue.Exit;
+                        }
+                    }
+                    // 执行
+                    let retCode = creep.harvest(source);
+                    if (retCode == ERR_NOT_OWNER){
+                        // 取消外矿任务 或派出 claimer 或其他
+                        return StateContinue.ExcutedAndExit;
+                    }
+                    return StateContinue.ExcutedAndContinue;
+                } else {
+                    return StateContinue.Continue;
+                }
+            }
+        },
+        onExit(creep: Creep): void { }
+    })
 }
 
 export default states;
+
+function getSourceIDAt(pos: RoomPosition): string {
+    let founds = pos.lookFor(LOOK_SOURCES);
+    if (founds.length == 0) {
+        return "";
+    } else {
+        return founds[0].id;
+    }
+}
+
+function getStructureIdAt(pos: RoomPosition, structureType: StructureConstant): string {
+    let founds = pos.lookFor(LOOK_STRUCTURES);
+    if (founds.length == 0) {
+        return "";
+    }
+    let output: string = "";
+    for (const found of founds) {
+        if (found instanceof Structure && found.structureType == structureType) {
+            output = found.id;
+            break;
+        }
+    }
+    return output;
+}
 
 function reachOnEnter(creep: Creep, data: StateData_reach): void {
     let stateData = creep.getStateData(creep.getCurrentState());
@@ -94,5 +160,6 @@ function reachAction(creep: Creep | PowerCreep): StateContinue {
         }
     }
     creep.moveTo(new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName), { range: stateData.range });
-    return StateContinue.Continue;
+    creep.room.visual.line(creep.pos.x, creep.pos.y, stateData.targetPos.x, stateData.targetPos.y);
+    return StateContinue.ExcutedAndContinue;
 }
