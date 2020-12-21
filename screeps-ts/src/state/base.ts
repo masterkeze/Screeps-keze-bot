@@ -15,9 +15,10 @@ const states: {
         onExit(creep: Creep): void { }
     }),
     upgradeUntilEmpty: (): IStateConfig => ({
-        onEnter(creep: Creep, data: StateData_upgrade): void {
-            data.range = 3;
-            reachOnEnter(creep, data);
+        onEnter(creep: Creep, data: StateData): void {
+            let stateData = data;
+            stateData.range = 1;
+            reachOnEnter(creep, stateData);
         },
         actions: {
             moveTo: reachAction,
@@ -54,10 +55,10 @@ const states: {
         onExit(creep: Creep): void { }
     }),
     harvestUntilFull: (): IStateConfig => ({
-        onEnter(creep: Creep, data: StateData_harvest): void {
-            data.range = 1;
-            reachOnEnter(creep, data);
-            
+        onEnter(creep: Creep, data: StateData): void {
+            let stateData = data;
+            stateData.range = 1;
+            reachOnEnter(creep, stateData);
         },
         actions: {
             moveTo: reachAction,
@@ -80,26 +81,44 @@ const states: {
                         return StateContinue.Continue;
                     }
                     if (source.energy == 0){
-                        return StateContinue.Exit;
+                        // wait for regeneration
+                        return StateContinue.Continue;
                     }
-                    if (stateData.harvestMode == 1){
-                        if ((source.energy/source.ticksToRegeneration) < creep.getActiveBodyparts(WORK)*2){
-                            return StateContinue.Exit;
-                        }
-                    }
+                    // if (stateData.harvestMode == 1){
+                    //     if ((source.energy/source.ticksToRegeneration) < creep.getActiveBodyparts(WORK)*2){
+                    //         return StateContinue.Exit;
+                    //     }
+                    // }
                     // 执行
                     let retCode = creep.harvest(source);
                     if (retCode == ERR_NOT_OWNER){
                         // 取消外矿任务 或派出 claimer 或其他
                         return StateContinue.Exit;
                     }
-                    return StateContinue.Continue;
+                    if (creep.getMomentStore(RESOURCE_ENERGY) as number >= creep.store.getCapacity(RESOURCE_ENERGY)){
+                        return StateContinue.Exit;
+                    } else {
+                        return StateContinue.Continue;
+                    }
                 } else {
                     return StateContinue.Continue;
                 }
             }
         },
         onExit(creep: Creep): void { }
+    }),
+    transferOnce: (): IStateConfig => ({
+        onEnter(creep: Creep, data: StateDataOneResource): void {
+            let stateData = data;
+            stateData.range = 1;
+            reachOnEnter(creep, stateData);
+        },
+        actions:{
+            moveTo: reachAction,
+            transfer(creep: Creep): StateContinue {
+            }
+        },
+        onExit(creep: Creep): void {}
     })
 }
 
@@ -129,7 +148,7 @@ function getStructureIdAt(pos: RoomPosition, structureType: StructureConstant): 
     return output;
 }
 
-function reachOnEnter(creep: Creep, data: StateData_reach): void {
+function reachOnEnter(creep: Creep, data: StateData): void {
     let stateData = creep.getCurrentStateData();
 
     if (data.targetPos instanceof RoomPosition) {

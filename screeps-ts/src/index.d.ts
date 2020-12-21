@@ -226,19 +226,10 @@ interface StateData {
     targetPos: RoomPosition | { pos: RoomPosition }
     range?: number
 }
-interface StateData_withdrawOnce extends StateData { }
-interface StateData_upgrade extends StateData_reach {
-    controllerID?: string
+interface StateDataOneResource extends StateData {
+    resourceType: string,
+    amount?: number
 }
-/**
- * mode: 0 (default) exit when creep is full
- * mode: 1, exit when harvest rate is larger than generate rate
- */
-interface StateData_harvest extends StateData_reach {
-    mode?: number
-    sourceID?: string
-}
-interface StateData_reach extends StateData { }
 
 declare module NodeJS {
     // 全局对象
