@@ -1,8 +1,8 @@
 /**
  * 资源包 {resourceType : value}
  */
-interface store {
-    [resourceType: string]: number
+type store = {
+    [resourceType in ResourceConstant] ?: number
 }
 
 /**
@@ -154,7 +154,8 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'distribute' | 'centerTransfer' | 'withdrawMulti' | 'transferMulti'
+type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'transferMulti'
+type TaskStateConstant = 'centerTransfer'
 type IdleState = "idle"
 type StateConstant = BaseStateConstant | IdleState
 type StateExport = {
@@ -216,7 +217,10 @@ interface StateMemoryData {
     sourcePos?: Pos
     range?: number
     controllerID?: string
-    harvestMode?: number
+    resourceType?: ResourceConstant
+    amount?: number
+    reached?: 0|1
+    store: store
 }
 
 /**
@@ -226,9 +230,19 @@ interface StateData {
     targetPos: RoomPosition | { pos: RoomPosition }
     range?: number
 }
+
+/**
+ * Creep 状态机初始化信息，需包含一种资源
+ */
 interface StateDataOneResource extends StateData {
-    resourceType: string,
-    amount?: number
+    resourceType: ResourceConstant,
+    amount: number
+}
+/**
+ * Creep 状态机初始化信息，需包含一个资源包
+ */
+interface StateDataMultiResources extends StateData {
+    store: store
 }
 
 declare module NodeJS {
@@ -292,18 +306,30 @@ interface PowerCreep {
     getCurrentStateData(): StateMemoryData
     getMomentStore(resourceType: string): store | number
 }
-
+/**
+ * Moment 相关方法
+ * @returns number
+ */
 interface Source {
     getMomentStore(): number
 }
 
+/**
+ * Moment 相关方法
+ * @returns number
+ */
 interface Mineral {
     getMomentStore(): number
 }
 
+/**
+ * Moment 相关方法
+ * @returns number
+ */
 interface Structure {
     getMomentStore(resourceType?: string): store | number
 }
+
 /**
  * Creep 拓展
  */
@@ -313,7 +339,7 @@ interface Creep {
     getStateData(stateName: StateConstant): StateMemoryData
     getCurrentStateData(): StateMemoryData
     getCurrentState(): StateConstant
-    getMomentStore(resourceType?: string): store | number
+    getMomentStore(resourceType?: ResourceConstant): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode

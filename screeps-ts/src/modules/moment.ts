@@ -114,10 +114,46 @@ export namespace Moment {
     export function load(): void {
         /**
          * 返回moment 储量
-         * @param  {string} resourceType
+         * @param  {ResourceConstant} resourceType
          * @returns 如果传了resourceType，则返回具体的数值，否则返回store
          */
-        Creep.prototype.getMomentStore = function (resourceType?: string): store | number {
+        Creep.prototype.getMomentStore = function (resourceType?: ResourceConstant): store | number {
+            let me = this as Creep;
+            let moment = Moment.get(me.id);
+            if (resourceType) {
+                let momentStore = moment.resourcesChange[resourceType];
+                let actualStore = me.store[resourceType];
+                if (!momentStore) momentStore = 0;
+                if (!actualStore) actualStore = 0;
+                return momentStore + actualStore;
+            } else {
+                return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(me.store)) as store);
+            }
+        }
+        /**
+         * 返回moment 本tick可供使用的储量，排除本tick的进项
+         * @param  {ResourceConstant} resourceType
+         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+         */
+        Creep.prototype.getMomentStoreToUse = function (resourceType?: ResourceConstant): store | number {
+            let me = this as Creep;
+            let moment = Moment.get(me.id);
+            if (resourceType) {
+                let momentStore = moment.out[resourceType];
+                let actualStore = me.store[resourceType];
+                if (!momentStore) momentStore = 0;
+                if (!actualStore) actualStore = 0;
+                return actualStore - momentStore;
+            } else {
+                return Helper.storeMinus(JSON.parse(JSON.stringify(me.store)) as store, moment.out);
+            }
+        }
+        /**
+         * 返回moment 储量
+         * @param  {ResourceConstant} resourceType
+         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
+         */
+        PowerCreep.prototype.getMomentStore = function (resourceType?: ResourceConstant): store | number {
             let me = this as Creep;
             let moment = Moment.get(me.id);
             if (resourceType) {
@@ -132,28 +168,10 @@ export namespace Moment {
         }
         /**
          * 返回moment 储量
-         * @param  {string} resourceType
+         * @param  {ResourceConstant} resourceType
          * @returns 如果传了resourceType，则返回具体的数值，否则返回store
          */
-        PowerCreep.prototype.getMomentStore = function (resourceType?: string): store | number {
-            let me = this as Creep;
-            let moment = Moment.get(me.id);
-            if (resourceType) {
-                let momentStore = moment.resourcesChange[resourceType];
-                let actualStore = me.store[resourceType];
-                if (!momentStore) momentStore = 0;
-                if (!actualStore) actualStore = 0;
-                return momentStore + actualStore;
-            } else {
-                return Helper.storeAdd(moment.resourcesChange, JSON.parse(JSON.stringify(me.store)) as store);
-            }
-        }
-        /**
-         * 返回moment 储量
-         * @param  {string} resourceType
-         * @returns 如果传了resourceType，则返回具体的数值，否则返回store
-         */
-        Structure.prototype.getMomentStore = function (resourceType?: string): store | number {
+        Structure.prototype.getMomentStore = function (resourceType?: ResourceConstant): store | number {
             let structure = this as Structure;
             let moment = Moment.get(structure.id);
             let me = this as IHasStore;
@@ -193,6 +211,6 @@ export namespace Moment {
             return momentStore + actualStore;
         }
 
-        
+
     }
 }
