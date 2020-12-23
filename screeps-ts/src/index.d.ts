@@ -305,6 +305,7 @@ interface PowerCreep {
     getCurrentState(): StateConstant
     getCurrentStateData(): StateMemoryData
     getMomentStore(resourceType: string): store | number
+    getMomentStoreToUse(resourceType: string): store | number
 }
 /**
  * Moment 相关方法
@@ -328,6 +329,7 @@ interface Mineral {
  */
 interface Structure {
     getMomentStore(resourceType?: string): store | number
+    getMomentStoreToUse(resourceType: string): store | number
 }
 
 /**
@@ -340,6 +342,7 @@ interface Creep {
     getCurrentStateData(): StateMemoryData
     getCurrentState(): StateConstant
     getMomentStore(resourceType?: ResourceConstant): store | number
+    getMomentStoreToUse(resourceType: string): store | number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode
