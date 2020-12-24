@@ -1,3 +1,5 @@
+import buildingCache from "modules/buildingCache";
+
 /**
  * 基础状态机
  */
@@ -102,6 +104,54 @@ const states: {
         },
         onExit(creep: Creep): void { }
     }),
+    harvestJustOnTime: (): IStateConfig => ({
+        onEnter(creep: Creep, data: StateData): void {
+            let reachData = data;
+            reachData.range = 1;
+            reachOnEnter(creep, reachData);
+        },
+        actions: {
+            moveTo: reachAction,
+            harvest(creep: Creep): StateContinue {
+                if (creep.store.getFreeCapacity(RESOURCE_ENERGY) == 0) {
+                    return StateContinue.Exit;
+                }
+                let stateData = creep.getCurrentStateData();
+                if (creep.pos.roomName == stateData.targetPos.roomName) {
+                    if (!stateData.sourceID) {
+                        let targetPos = new RoomPosition(stateData.targetPos.x, stateData.targetPos.y, stateData.targetPos.roomName);
+                        let sourceID = getSourceIDAt(targetPos);
+                        if (!sourceID) {
+                            return StateContinue.Exit;
+                        }
+                        stateData.sourceID = sourceID;
+                    }
+                    let source = Game.getObjectById(stateData.sourceID) as Source;
+                    if (creep.pos.getRangeTo(source) > 1) {
+                        return StateContinue.Continue;
+                    }
+                    if (source.energy == 0) {
+                        // wait for regeneration
+                        return StateContinue.Continue;
+                    }
+                    // 执行
+                    if (source.energy / (source.ticksToRegeneration + 1) >= 10) {
+                        let retCode = creep.harvest(source);
+                        if (retCode == ERR_NOT_OWNER) {
+                            // 取消外矿任务 或派出 claimer 或其他
+                            return StateContinue.Exit;
+                        }
+                        return StateContinue.Continue;
+                    } else {
+                        return StateContinue.Exit;
+                    }
+                } else {
+                    return StateContinue.Continue;
+                }
+            },
+        },
+        onExit(creep: Creep): void { }
+    }),
     transferOnce: (): IStateConfig => ({
         onEnter(creep: Creep, data: StateDataOneResource): void {
             let reachData = data;
@@ -130,8 +180,9 @@ const states: {
                     if (creep.pos.getRangeTo(target) > 1) {
                         return StateContinue.Continue;
                     }
+                    let transferAmount = Math.min(amount,target.getMomentStoreToTransfer(resourceType));
                     // 执行
-                    creep.transfer(target, resourceType, amount);
+                    creep.transfer(target, resourceType, transferAmount);
                     return StateContinue.Exit;
                 } else {
                     return StateContinue.Continue;
@@ -168,8 +219,9 @@ const states: {
                     if (creep.pos.getRangeTo(target) > 1) {
                         return StateContinue.Continue;
                     }
+                    let withdrawAmount = Math.min(amount,target.getMomentStoreToWithdraw(resourceType) as number);
                     // 执行
-                    creep.withdraw(target, resourceType, amount);
+                    creep.withdraw(target, resourceType, withdrawAmount);
                     return StateContinue.Exit;
                 } else {
                     return StateContinue.Continue;
@@ -231,11 +283,13 @@ const states: {
                 let stateData = creep.getCurrentStateData();
                 let store = stateData.store;
                 let resourceTypes = Object.keys(store);
+                // 全部处理完了
                 if (resourceTypes.length == 0) {
                     return StateContinue.Exit;
                 }
                 let resourceType = resourceTypes[0] as ResourceConstant;
                 let amount = store[resourceType];
+                // 装不下了
                 if (creep.store.getFreeCapacity(resourceType) == 0) {
                     return StateContinue.Exit;
                 }
@@ -251,21 +305,26 @@ const states: {
                         stateData.targetID = targetID;
                     }
                     let target = Game.getObjectById(stateData.targetID) as StructureStorage;
+                    // 目标消失了
                     if (!target) {
                         return StateContinue.Exit;
                     }
+                    // 还没够着
                     if (creep.pos.getRangeTo(target) > 1) {
                         return StateContinue.Continue;
                     }
-                    withdrawAmount = Math.min(withdrawAmount,target.store[resourceType]);
+                    withdrawAmount = Math.min(withdrawAmount,target.getMomentStoreToWithdraw(resourceType) as number);
                     // 执行
-                    creep.withdraw(target, resourceType, withdrawAmount);
-                    if (withdrawAmount == amount) {
-                        delete store[resourceType];
-                        return StateContinue.Continue;
-                    } else {
-                        return StateContinue.Exit;
+                    let retCode = creep.withdraw(target, resourceType, withdrawAmount);
+                    if (retCode == OK) {
+                        if (withdrawAmount == amount) {
+                            delete store[resourceType];
+                            return StateContinue.Continue;
+                        }
+
                     }
+                    // 其他意外情况
+                    return StateContinue.Exit;
                 } else {
                     return StateContinue.Continue;
                 }

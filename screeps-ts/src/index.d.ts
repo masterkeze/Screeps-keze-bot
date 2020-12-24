@@ -154,7 +154,7 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'transferMulti'
+type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'transferMulti' | 'harvestJustOnTime'
 type TaskStateConstant = 'centerTransfer'
 type IdleState = "idle"
 type StateConstant = BaseStateConstant | IdleState
@@ -213,6 +213,7 @@ interface Coor {
 interface StateMemoryData {
     targetID?: string
     sourceID?: string
+    containerID?: string
     targetPos?: Pos
     sourcePos?: Pos
     range?: number
@@ -305,7 +306,8 @@ interface PowerCreep {
     getCurrentState(): StateConstant
     getCurrentStateData(): StateMemoryData
     getMomentStore(resourceType: string): store | number
-    getMomentStoreToUse(resourceType: string): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
 }
 /**
  * Moment 相关方法
@@ -329,7 +331,8 @@ interface Mineral {
  */
 interface Structure {
     getMomentStore(resourceType?: string): store | number
-    getMomentStoreToUse(resourceType: string): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
 }
 
 /**
@@ -342,7 +345,8 @@ interface Creep {
     getCurrentStateData(): StateMemoryData
     getCurrentState(): StateConstant
     getMomentStore(resourceType?: ResourceConstant): store | number
-    getMomentStoreToUse(resourceType: string): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
     // rewrite actions
     _attack(target: AnyCreep | Structure): CreepActionReturnCode
     _attackController(target: StructureController): CreepActionReturnCode
