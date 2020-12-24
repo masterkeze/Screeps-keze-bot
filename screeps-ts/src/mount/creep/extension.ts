@@ -59,7 +59,7 @@ export default class CreepExtension extends Creep {
      * @param  {string} resourceType?
      * @returns 如果传了resourceType，则返回具体的数值，否则返回store
      */
-    public getUnlockedStore(resourceType?: string): store | number {
+    public getUnlockedStore(resourceType?: ResourceConstant): store | number {
         let momentStore = this.getMomentStore(resourceType);
         let lockedStore = this.getLockedStore(resourceType);
         if (resourceType) {
