@@ -19,21 +19,21 @@ export namespace Market {
  * 1tick 可以挂N个单。
  */
 
-Game.market.createOrder({
-    type: ORDER_BUY,
-    resourceType: RESOURCE_POWER,
-    price: 13,
-    totalAmount: 10,
-    roomName: "W28S22"   
-});
+// Game.market.createOrder({
+//     type: ORDER_BUY,
+//     resourceType: RESOURCE_POWER,
+//     price: 13,
+//     totalAmount: 10,
+//     roomName: "W28S22"   
+// });
 
-Game.market.createOrder({
-    type: ORDER_BUY,
-    resourceType: RESOURCE_POWER,
-    price: 13,
-    totalAmount: 10,
-    roomName: "W29S22"   
-});
+// Game.market.createOrder({
+//     type: ORDER_BUY,
+//     resourceType: RESOURCE_POWER,
+//     price: 13,
+//     totalAmount: 10,
+//     roomName: "W29S22"   
+// });
 
-Game.market.changeOrderPrice("5fe5c9dad15af740e8f3c6a2",13.001);
-Game.market.extendOrder("5fe5c9dad15af740e8f3c6a2",1);
+// Game.market.changeOrderPrice("5fe5c9dad15af740e8f3c6a2",13.001);
+// Game.market.extendOrder("5fe5c9dad15af740e8f3c6a2",1);
