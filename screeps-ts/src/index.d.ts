@@ -2,7 +2,7 @@
  * 资源包 {resourceType : value}
  */
 type store = {
-    [resourceType in ResourceConstant] ?: number
+    [resourceType in ResourceConstant]?: number
 }
 
 /**
@@ -220,7 +220,7 @@ interface StateMemoryData {
     controllerID?: string
     resourceType?: ResourceConstant
     amount?: number
-    reached?: 0|1
+    reached?: 0 | 1
     store: store
 }
 
@@ -252,6 +252,7 @@ declare module NodeJS {
         // 是否已经挂载拓展
         hasExtension?: boolean
         moment?: MomentCollection
+        spawnTask?: AsyncTaskAction
     }
 }
 
@@ -260,6 +261,7 @@ declare module NodeJS {
 interface Memory {
     lock?: LockCollection
     group?: GroupCollection
+    spawnTasks?: AsyncTasksMemory
 }
 
 interface Room {
@@ -425,4 +427,107 @@ interface SpawnConfig {
     name: string
     memory: CreepMemory
     priority: number
+}
+
+/**
+ * 每个房间维护一个队列
+ */
+interface AsyncTasksMemory{
+    [roomName:string]:AsyncTaskMemoryBase[]
+}
+
+/**
+ * 最终存在memory里的AsyncTask信息基类
+ */
+interface AsyncTaskMemoryBase {
+    id:string
+    priority:number
+    ticksToExpired?:number
+}
+
+/**
+ * 初始化AsyncTask的基类
+ */
+interface AsyncTaskBase {
+    id:string
+}
+
+
+/**
+ * AsyncTask交互接口
+ */
+interface AsyncTaskAction {
+    
+    /**
+     * 外部方法
+     * 添加事件,指定id,房间及事件
+     * @returns OK|ERR_NAME_EXISTS
+     */
+    push(id:string,roomName:string,asyncTask:AsyncTaskBase):OK|ERR_NAME_EXISTS
+
+    /**
+     * 外部方法
+     * 查看优先级最高的事件
+     * @param  {string} roomName
+     * @returns AsyncTaskBase
+     */
+    peek(roomName:string):AsyncTaskBase
+
+    /**
+     * 外部方法
+     * 取出优先级最高的事件
+     * @param  {string} roomName
+     * @returns AsyncTaskBase
+     */
+    pop(roomName:string):AsyncTaskBase
+
+    /**
+     * 内部方法
+     * 从memory加载回实例
+     */
+    load():void
+
+    /**
+     * 内部方法
+     * 从实例存回memory
+     */
+    save():void
+
+    /**
+     * 内部方法
+     * 移除所有过期的方法
+     */
+    clean():void
+    
+    /**
+     * 内部方法
+     * 分析出事件的优先级
+     * @param  {AsyncTaskBase} asyncTask
+     * @returns number
+     */
+    getPriority(asyncTask:AsyncTaskBase):number
+
+    /**
+     * 内部方法
+     * 分析出事件的过期时间
+     * @param  {AsyncTaskBase} asyncTask
+     * @returns number
+     */
+    getTicksToExpired(asyncTask:AsyncTaskBase):number
+    
+    /**
+     * 内部方法
+     * 串行化成可以存储的信息
+     * @param  {AsyncTaskBase} asyncTask
+     * @returns AsyncTaskMemoryBase
+     */
+    serialize(asyncTask:AsyncTaskBase):AsyncTaskMemoryBase
+    
+    /**
+     * 内部方法
+     * 实例化成外部可用的对象
+     * @param  {AsyncTaskMemoryBase} asyncTaskMemory
+     * @returns AsyncTaskBase
+     */
+    deserialize(asyncTaskMemory:AsyncTaskMemoryBase):AsyncTaskBase
 }
