@@ -1,5 +1,3 @@
-import { loadavg } from "os"
-
 /**
  * 最终存在memory里的event信息基类
  */
@@ -88,50 +86,4 @@ interface EventAction {
      * @returns EventBase
      */
     deserialize(eventMemory:EventMemoryBase):EventBase
-}
-
-type EVENT_ALL = "spawn" | "center"
-
-export namespace EventInterface{
-    export function load(){
-
-    }
-
-}
-
-
-class EventManager implements EventAction{
-    push(id,roomName,event){
-        
-        return OK;
-    }
-    peek(roomName){
-        let output:EventBase;
-        return output;
-    }
-    pop(roomName){
-        let output:EventBase;
-        return output;
-    }
-    load(){}
-    save(){}
-    getPriority(event){
-        return 0;
-    }
-    getTicksToExpired(event){
-        return 0;
-    }
-    serialize(event){
-        let output:EventMemoryBase;
-        return output;
-    }
-    deserialize(eventMemory){
-        let output:EventBase;
-        return output;
-    }
-
-}
-
-class SpawnEventManager extends EventManager{
-
 }
