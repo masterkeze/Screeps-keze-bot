@@ -50,14 +50,7 @@ export namespace Helper {
         }
         return _intersection;
     }
-    export function popSpawnQueue(spawnConfigHeap: SpawnConfig[]): SpawnConfig {
-        let queue: PriorityQueue = new PriorityQueue((a: SpawnConfig, b: SpawnConfig) => a.priority > b.priority, spawnConfigHeap);
-        return queue.pop() as SpawnConfig;
-    }
-    export function pushSpawnQueue(spawnConfigHeap: SpawnConfig[], ...spawnConfigList: SpawnConfig[]): number {
-        let queue: PriorityQueue = new PriorityQueue((a: SpawnConfig, b: SpawnConfig) => a.priority > b.priority, spawnConfigHeap);
-        return queue.push(spawnConfigList);
-    }
+
     export function getUniqueNameForCreep(creepName: string): string {
         let baseCreepName = creepName;
         let newCreepName = baseCreepName;

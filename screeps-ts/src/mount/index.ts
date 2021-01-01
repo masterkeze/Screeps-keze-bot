@@ -9,6 +9,7 @@ import {Moment} from 'modules/moment'
 
 export function mount (): void {
     if (!global.hasExtension) {
+        global.hasExtension = true;
         console.log('[mount] 重新挂载拓展');
 
         // 挂载前置工作

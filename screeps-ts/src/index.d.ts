@@ -154,7 +154,7 @@ interface CreepMemory {
     state?: CreepState
 }
 
-type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'transferMulti' | 'harvestJustOnTime'
+type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'harvestJustOnTime' //| 'transferMulti' 
 type TaskStateConstant = 'centerTransfer'
 type IdleState = "idle"
 type StateConstant = BaseStateConstant | IdleState
@@ -426,7 +426,6 @@ interface SpawnConfig {
     body: BodyPartConstant[]
     name: string
     memory: CreepMemory
-    priority: number
 }
 
 /**
@@ -492,12 +491,6 @@ interface AsyncTaskAction {
      * 从实例存回memory
      */
     save():void
-
-    /**
-     * 内部方法
-     * 移除所有过期的方法
-     */
-    clean():void
     
     /**
      * 内部方法

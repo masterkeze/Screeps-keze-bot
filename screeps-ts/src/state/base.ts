@@ -1,5 +1,3 @@
-import buildingCache from "modules/buildingCache";
-
 /**
  * 基础状态机
  */

@@ -10,7 +10,7 @@ module.exports.loop = function (): void {
     creepRunner(Game.creeps);
     powerCreepRunner(Game.powerCreeps);
     // 执行房间，建筑
-    roomRunner(Game.rooms);
+    // roomRunner(Game.rooms);
     // 事后清理
     teardown();
 }

@@ -16,7 +16,6 @@ const roles: {
             let energyStore = creep.getMomentStore(RESOURCE_ENERGY) as number;
 
             if (energyStore == 0){
-                newState = "harvest"
             }
 
             return { newState: newState, data: { targetPos: targetPos } };

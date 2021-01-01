@@ -1,11 +1,13 @@
 import { PriorityQueue } from 'modules/priorityQueue'
 let spawnTaskManager = global.spawnTask as SpawnAsyncTaskManager;
-interface SpawnAsyncTask extends AsyncTaskBase {
+const EXPIRE_PERIOD:number = 50000;
 
+interface SpawnAsyncTask extends AsyncTaskBase {
+    config:SpawnConfig
 }
 
 interface SpawnAsyncTaskMemory extends AsyncTaskMemoryBase {
-
+    config:SpawnConfig
 }
 
 interface InternalStorage {
@@ -17,22 +19,18 @@ class SpawnAsyncTaskManager implements AsyncTaskAction {
     constructor() {
         this.load();
     }
-    
-    public get value() : string {
-        return 
-    }
-    
+        
     push(id, roomName, asyncTask: SpawnAsyncTask) {
 
         return OK;
     }
-    peek(roomName): AsyncTaskBase {
+    peek(roomName:string): SpawnAsyncTask {
         let queue: PriorityQueue = this._dict[roomName];
         let raw: SpawnAsyncTaskMemory = queue.peek();
         let output: SpawnAsyncTask = this.deserialize(raw);
         return output;
     }
-    pop(roomName) {
+    pop(roomName:string): SpawnAsyncTask {
         let queue: PriorityQueue = this._dict[roomName];
         let raw: SpawnAsyncTaskMemory = queue.pop();
         let output: SpawnAsyncTask = this.deserialize(raw);
@@ -44,26 +42,30 @@ class SpawnAsyncTaskManager implements AsyncTaskAction {
         }
     }
     save() {
-        Memory.spawnTasks = {}
+        Memory.spawnTasks = {};
         for (const [roomName, queue] of Object.entries(this._dict)) {
             Memory.spawnTasks[roomName] = queue._heap;
         }
     }
     clean(){
-
+        for (const [roomName, queue] of Object.entries(this._dict)) {
+            let heap:AsyncTaskMemoryBase[] = queue._heap;
+            heap = heap.filter((element)=>{return (element.ticksToExpired) && (element.ticksToExpired >= Game.time)});
+        }
+        this.save();
     }
     getPriority(AsyncTask: SpawnAsyncTask) {
         return 0;
     }
     getTicksToExpired(AsyncTask: SpawnAsyncTask) {
-        return Game.time + 50000;
+        return Game.time + EXPIRE_PERIOD;
     }
     serialize(AsyncTask) {
-        let output: AsyncTaskMemoryBase;
+        let output: SpawnAsyncTaskMemory;
         return output;
     }
     deserialize(AsyncTaskMemory) {
-        let output: AsyncTaskBase;
+        let output: SpawnAsyncTask;
         return output;
     }
 }
@@ -81,6 +83,12 @@ export namespace SpawnAsyncTaskExport {
     }
     export function push(id: string, roomName: string, asyncTask: SpawnAsyncTask) {
         return spawnTaskManager.push(id, roomName, asyncTask);
+    }
+    export function peek(roomName: string) {
+        return spawnTaskManager.peek(roomName);
+    }
+    export function pop(roomName: string) {
+        return spawnTaskManager.pop(roomName);
     }
 }
 
