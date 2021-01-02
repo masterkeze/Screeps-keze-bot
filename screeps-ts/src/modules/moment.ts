@@ -111,7 +111,8 @@ export namespace Moment {
         if (Helper.intersection(currentSet, Mconfliction).size > 1) return false;
         return true;
     }
-    export function load(): void {
+    export function mount(): void {
+        init();
         /**
          * 返回moment 储量
          * @param  {ResourceConstant} resourceType

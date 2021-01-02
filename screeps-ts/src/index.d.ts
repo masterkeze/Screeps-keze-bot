@@ -253,6 +253,7 @@ declare module NodeJS {
         hasExtension?: boolean
         moment?: MomentCollection
         spawnTask?: AsyncTaskAction
+        test?: Object
     }
 }
 
@@ -335,6 +336,18 @@ interface Structure {
     getMomentStore(resourceType?: string): store | number
     getMomentStoreToWithdraw(resourceType: string): store | number
     getMomentStoreToTransfer(resourceType: string): number
+}
+
+interface SpawnAsyncTask extends AsyncTaskBase {
+    config:SpawnConfig
+}
+
+interface SpawnAsyncTaskMemory extends AsyncTaskMemoryBase {
+    config:SpawnConfig
+}
+
+interface StructureSpawn {
+    work(): void
 }
 
 /**
@@ -431,24 +444,24 @@ interface SpawnConfig {
 /**
  * 每个房间维护一个队列
  */
-interface AsyncTasksMemory{
-    [roomName:string]:AsyncTaskMemoryBase[]
+interface AsyncTasksMemory {
+    [roomName: string]: AsyncTaskMemoryBase[]
 }
 
 /**
  * 最终存在memory里的AsyncTask信息基类
  */
 interface AsyncTaskMemoryBase {
-    id:string
-    priority:number
-    ticksToExpired?:number
+    id: string
+    priority: number
+    ticksToExpired?: number
 }
 
 /**
  * 初始化AsyncTask的基类
  */
 interface AsyncTaskBase {
-    id:string
+    id: string
 }
 
 
@@ -456,13 +469,12 @@ interface AsyncTaskBase {
  * AsyncTask交互接口
  */
 interface AsyncTaskAction {
-    
     /**
      * 外部方法
      * 添加事件,指定id,房间及事件
      * @returns OK|ERR_NAME_EXISTS
      */
-    push(id:string,roomName:string,asyncTask:AsyncTaskBase):OK|ERR_NAME_EXISTS
+    push(id: string, roomName: string, asyncTask: AsyncTaskBase): OK | ERR_NAME_EXISTS
 
     /**
      * 外部方法
@@ -470,7 +482,7 @@ interface AsyncTaskAction {
      * @param  {string} roomName
      * @returns AsyncTaskBase
      */
-    peek(roomName:string):AsyncTaskBase
+    peek(roomName: string): AsyncTaskMemoryBase
 
     /**
      * 外部方法
@@ -478,27 +490,33 @@ interface AsyncTaskAction {
      * @param  {string} roomName
      * @returns AsyncTaskBase
      */
-    pop(roomName:string):AsyncTaskBase
+    pop(roomName: string): AsyncTaskMemoryBase
 
     /**
      * 内部方法
      * 从memory加载回实例
      */
-    load():void
+    load(): void
 
     /**
      * 内部方法
      * 从实例存回memory
      */
-    save():void
-    
+    save(): void
+
+    /**
+     * 内部方法
+     * 清理过期任务
+     */
+    clean(): void
+
     /**
      * 内部方法
      * 分析出事件的优先级
      * @param  {AsyncTaskBase} asyncTask
      * @returns number
      */
-    getPriority(asyncTask:AsyncTaskBase):number
+    getPriority(asyncTask: AsyncTaskBase): number
 
     /**
      * 内部方法
@@ -506,21 +524,6 @@ interface AsyncTaskAction {
      * @param  {AsyncTaskBase} asyncTask
      * @returns number
      */
-    getTicksToExpired(asyncTask:AsyncTaskBase):number
-    
-    /**
-     * 内部方法
-     * 串行化成可以存储的信息
-     * @param  {AsyncTaskBase} asyncTask
-     * @returns AsyncTaskMemoryBase
-     */
-    serialize(asyncTask:AsyncTaskBase):AsyncTaskMemoryBase
-    
-    /**
-     * 内部方法
-     * 实例化成外部可用的对象
-     * @param  {AsyncTaskMemoryBase} asyncTaskMemory
-     * @returns AsyncTaskBase
-     */
-    deserialize(asyncTaskMemory:AsyncTaskMemoryBase):AsyncTaskBase
+    getTicksToExpired(asyncTask: AsyncTaskBase): number
+
 }

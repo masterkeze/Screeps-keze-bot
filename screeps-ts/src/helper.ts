@@ -6,7 +6,7 @@ export namespace Helper {
         return output;
     }
     export function storeAdd(store1: store, store2: store): store {
-        let output: store;
+        let output: store = {};
         Object.keys(store1).forEach(resourceType => {
             let value = store1[resourceType];
             if (value) output[resourceType] = value;
@@ -24,7 +24,7 @@ export namespace Helper {
         return output;
     }
     export function storeMinus(store1: store, store2: store): store {
-        let output: store;
+        let output: store = {};
         Object.keys(store1).forEach(resourceType => {
             let value = store1[resourceType];
             if (value) output[resourceType] = value;

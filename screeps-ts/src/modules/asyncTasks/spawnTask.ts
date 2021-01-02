@@ -1,51 +1,59 @@
 import { PriorityQueue } from 'modules/priorityQueue'
-let spawnTaskManager = global.spawnTask as SpawnAsyncTaskManager;
+
 const EXPIRE_PERIOD:number = 50000;
-
-interface SpawnAsyncTask extends AsyncTaskBase {
-    config:SpawnConfig
-}
-
-interface SpawnAsyncTaskMemory extends AsyncTaskMemoryBase {
-    config:SpawnConfig
-}
 
 interface InternalStorage {
     [roomName: string]: PriorityQueue
 }
 
 class SpawnAsyncTaskManager implements AsyncTaskAction {
-    _dict: InternalStorage = {};
-    constructor() {
-        this.load();
-    }
-        
+    _dict:InternalStorage = {};
     push(id, roomName, asyncTask: SpawnAsyncTask) {
-
+        if (!this._dict[roomName]){
+            this._dict[roomName] = new PriorityQueue(((a: SpawnAsyncTaskMemory, b: SpawnAsyncTaskMemory) => a.priority > b.priority), []);
+        }
+        let queue: PriorityQueue = this._dict[roomName];
+        let priority = this.getPriority(asyncTask);
+        let ticksToExpired = this.getTicksToExpired(asyncTask); 
+        let preparedTask:any = asyncTask;
+        preparedTask.priority = priority;
+        preparedTask.ticksToExpired = ticksToExpired;
+        queue.push(asyncTask);
+        console.log("pushing spawn task");
         return OK;
     }
-    peek(roomName:string): SpawnAsyncTask {
+    peek(roomName:string): SpawnAsyncTaskMemory {
         let queue: PriorityQueue = this._dict[roomName];
+        if (!queue){
+            this._dict[roomName] = new PriorityQueue(((a: SpawnAsyncTaskMemory, b: SpawnAsyncTaskMemory) => a.priority > b.priority), []);
+            return null;
+        }
         let raw: SpawnAsyncTaskMemory = queue.peek();
-        let output: SpawnAsyncTask = this.deserialize(raw);
-        return output;
+        console.log("peeking spawn task");
+        return raw;
     }
-    pop(roomName:string): SpawnAsyncTask {
+    pop(roomName:string): SpawnAsyncTaskMemory {
         let queue: PriorityQueue = this._dict[roomName];
+        if (!queue){
+            this._dict[roomName] = new PriorityQueue(((a: SpawnAsyncTaskMemory, b: SpawnAsyncTaskMemory) => a.priority > b.priority), []);
+            return null;
+        }
         let raw: SpawnAsyncTaskMemory = queue.pop();
-        let output: SpawnAsyncTask = this.deserialize(raw);
-        return output;
+        console.log("poping spawn task");
+        return raw;
     }
     load() {
         for (const [roomName, heap] of Object.entries(Memory.spawnTasks)) {
             this._dict[roomName] = new PriorityQueue(((a: SpawnAsyncTaskMemory, b: SpawnAsyncTaskMemory) => a.priority > b.priority), heap);
         }
+        console.log("loading spawn task");
     }
     save() {
         Memory.spawnTasks = {};
         for (const [roomName, queue] of Object.entries(this._dict)) {
             Memory.spawnTasks[roomName] = queue._heap;
         }
+        console.log("saving spawn task");
     }
     clean(){
         for (const [roomName, queue] of Object.entries(this._dict)) {
@@ -53,42 +61,29 @@ class SpawnAsyncTaskManager implements AsyncTaskAction {
             heap = heap.filter((element)=>{return (element.ticksToExpired) && (element.ticksToExpired >= Game.time)});
         }
         this.save();
+        console.log("cleaning spawn task");
     }
-    getPriority(AsyncTask: SpawnAsyncTask) {
+    getPriority(asyncTask: SpawnAsyncTask) {
         return 0;
     }
-    getTicksToExpired(AsyncTask: SpawnAsyncTask) {
+    getTicksToExpired(asyncTask: SpawnAsyncTask) {
         return Game.time + EXPIRE_PERIOD;
-    }
-    serialize(AsyncTask) {
-        let output: SpawnAsyncTaskMemory;
-        return output;
-    }
-    deserialize(AsyncTaskMemory) {
-        let output: SpawnAsyncTask;
-        return output;
     }
 }
 
 export namespace SpawnAsyncTaskExport {
-    /**
-     * 挂载到global上，并初始化单例
-     */
-    export function load() {
+    export function init(){
         if (!Memory.spawnTasks) {
             Memory.spawnTasks = {};
         }
+    }
+    /**
+     * 挂载到global上，并初始化单例
+     */
+    export function mount() {
         global.spawnTask = new SpawnAsyncTaskManager();
-        spawnTaskManager = global.spawnTask as SpawnAsyncTaskManager;
-    }
-    export function push(id: string, roomName: string, asyncTask: SpawnAsyncTask) {
-        return spawnTaskManager.push(id, roomName, asyncTask);
-    }
-    export function peek(roomName: string) {
-        return spawnTaskManager.peek(roomName);
-    }
-    export function pop(roomName: string) {
-        return spawnTaskManager.pop(roomName);
+        global.spawnTask.save();
+        //global.spawnTask.peek("a");
     }
 }
 
