@@ -1,3 +1,5 @@
+// ============================================================================================
+// 全局通用
 /**
  * 资源包 {resourceType : value}
  */
@@ -18,6 +20,172 @@ interface IHasPos {
 interface IHasStore {
     store: StoreDefinitionUnlimited
 }
+
+interface Pos {
+    x: number
+    y: number
+    roomName: string
+}
+
+interface Coor {
+    x: number
+    y: number
+}
+// ============================================================================================
+// 游戏内对象扩展
+
+// 内存
+interface Memory {
+    lock?: LockCollection
+    group?: GroupCollection
+    spawnTasks?: AsyncTasksMemory
+}
+
+// Global
+declare module NodeJS {
+    // 全局对象
+    interface Global {
+        // 是否已经挂载拓展
+        hasExtension?: boolean
+        moment?: MomentCollection
+        spawnTask?: AsyncTaskAction
+        test?: Object
+    }
+}
+
+/**
+ * Room Memory结构
+ */
+interface RoomMemory {
+
+}
+
+interface Room {
+    work(): void
+    getSpawnQueue(): SpawnConfig[]
+    getTerrainCache(): TerrainCahce
+    spawn: StructureSpawn[]
+    container: StructureContainer[]
+    tower: StructureTower[]
+    link: StructureLink[]
+    extension: StructureExtension[]
+    road: StructureRoad[]
+    wall: StructureWall[]
+    rampart: StructureRampart[]
+    portal: StructurePortal[]
+    lab: StructureLab[]
+    deposit: Deposit[]
+    source: Source[]
+    powerBank: StructurePowerBank[]
+    extractor: StructureExtractor
+    observer: StructureObserver
+    nuker: StructureNuker
+    powerSpawn: StructurePowerSpawn
+    factory: StructureFactory
+    invaderCore: StructureInvaderCore
+    mineral: Mineral
+    my: boolean
+    level: number
+}
+
+interface TerrainCahce {
+    sourcePos?: Coor[]
+    controllerPos?: Coor[]
+    mineralPos?: Coor[]
+    depositPos?: Coor[]
+    powerBankPos?: Coor[]
+    portalPos?: Coor[]
+}
+
+/**
+ * Creep Memory结构
+ */
+interface CreepMemory {
+    role: string
+    groupID: string
+    registered?: number
+    state?: CreepState
+}
+
+interface StructureSpawn {
+    work(): void
+}
+
+/**
+ * Creep 拓展
+ */
+interface Creep {
+    work(): void
+    runState(): string
+    getStateData(stateName: StateConstant): StateMemoryData
+    getCurrentStateData(): StateMemoryData
+    getCurrentState(): StateConstant
+    getMomentStore(resourceType?: ResourceConstant): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
+    // rewrite actions
+    _attack(target: AnyCreep | Structure): CreepActionReturnCode
+    _attackController(target: StructureController): CreepActionReturnCode
+    _build(target: ConstructionSite): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES | ERR_RCL_NOT_ENOUGH
+    _dismantle(target: Structure): CreepActionReturnCode
+    _drop(resourceType: ResourceConstant, amount?: number): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_ENOUGH_RESOURCES
+    _harvest(target: Source | Mineral | Deposit): CreepActionReturnCode | ERR_NOT_FOUND | ERR_NOT_ENOUGH_RESOURCES
+    _heal(target: AnyCreep): CreepActionReturnCode
+    _move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS
+    _moveTo(
+        target: RoomPosition | { pos: RoomPosition },
+        opts?: MoveToOpts,
+    ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND
+    _moveByPath(path: PathStep[] | RoomPosition[] | string): CreepMoveReturnCode | ERR_NOT_FOUND | ERR_INVALID_ARGS
+    _pickup(target: Resource): CreepActionReturnCode | ERR_FULL
+    _pull(target: Creep): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART
+    _rangedAttack(target: AnyCreep | Structure): CreepActionReturnCode
+    _rangedHeal(target: AnyCreep): CreepActionReturnCode
+    _rangedMassAttack(): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NO_BODYPART
+    _repair(target: Structure): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES
+    _transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
+    _upgradeController(target: StructureController): ScreepsReturnCode
+    _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
+}
+
+interface PowerCreep {
+    work(): void
+    runState(): string
+    getStateData(stateName: StateConstant): StateMemoryData
+    getCurrentState(): StateConstant
+    getCurrentStateData(): StateMemoryData
+    getMomentStore(resourceType: string): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
+}
+/**
+ * Moment 相关方法
+ * @returns number
+ */
+interface Source {
+    getMomentStore(): number
+}
+
+/**
+ * Moment 相关方法
+ * @returns number
+ */
+interface Mineral {
+    getMomentStore(): number
+}
+
+/**
+ * Moment 相关方法
+ * @returns number
+ */
+interface Structure {
+    getMomentStore(resourceType?: string): store | number
+    getMomentStoreToWithdraw(resourceType: string): store | number
+    getMomentStoreToTransfer(resourceType: string): number
+}
+
+// ============================================================================================
+// Creep 状态机
 
 // 所有记录的动作
 type ActionConstant = WorkActionConstant | CarryActionConstant | MoveActionConstant | AttackActionConstant | RangedAttackActionConstant | HealActionConstant | ClaimActionConstant
@@ -43,8 +211,89 @@ type HealActionConstant = "heal" | "rangedHeal"
 // claim相关动作
 type ClaimActionConstant = "claimController" | "attackController" | "reserveController"
 
+type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'harvestJustOnTime' //| 'transferMulti' 
+type TaskStateConstant = 'centerTransfer'
+type IdleState = "idle"
+type StateConstant = BaseStateConstant | IdleState
+type StateExport = {
+    [state in StateConstant]?: () => IStateConfig
+}
 
+/**
+ * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态 2 : 执行后结束 3 : 执行后继续
+ */
+declare enum StateContinue {
+    Exit = 0,
+    Continue = 1,
+}
 
+/**
+ * Action Wrapper 封装一下状态机action
+ */
+type StateActionWrapper = {
+    [actionName in ActionConstant]?: (creep: Creep | PowerCreep) => StateContinue
+}
+
+/**
+ * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
+ */
+interface IStateConfig {
+    onEnter(creep: Creep | PowerCreep, data: StateData): void
+    actions: StateActionWrapper
+    onExit(creep: Creep | PowerCreep): void
+}
+
+/**
+ * Creep 状态信息 序列化后的信息，挂载于Memory
+ */
+interface CreepState {
+    currentState: StateConstant
+    data: {
+        [stateName: string]: StateMemoryData
+    }
+}
+
+/**
+ * Creep 状态机序列化信息的基类
+ */
+interface StateMemoryData {
+    targetID?: string
+    sourceID?: string
+    containerID?: string
+    targetPos?: Pos
+    sourcePos?: Pos
+    range?: number
+    controllerID?: string
+    resourceType?: ResourceConstant
+    amount?: number
+    reached?: 0 | 1
+    store: store
+}
+
+/**
+ * Creep 状态机初始化信息的基类
+ */
+interface StateData {
+    targetPos: RoomPosition | { pos: RoomPosition }
+    range?: number
+}
+
+/**
+ * Creep 状态机初始化信息，需包含一种资源
+ */
+interface StateDataOneResource extends StateData {
+    resourceType: ResourceConstant,
+    amount: number
+}
+/**
+ * Creep 状态机初始化信息，需包含一个资源包
+ */
+interface StateDataMultiResources extends StateData {
+    store: store
+}
+
+// ============================================================================================
+// Moment + Lock
 /**
  * 记录单tick操作汇总，记录多个对象操作同一个对象时的细节信息。
  * 目的：更精确的储量，伤害统计
@@ -101,291 +350,8 @@ interface LockCollection {
     [structureID: string]: Lock
 }
 
-/**
- * 序列化的基础任务数据结构
- */
-interface TaskData {
-    name: string
-    type: string
-    source: string
-    store: StoreDefinition
-    created: number
-    subTasks: string[]
-    callbacks: string[]
-    locks: string[]
-}
-
-/**
- * 点对点运输任务数据结构
- */
-interface TransferTaskData extends TaskData {
-    target: string
-}
-
-/**
- * 多资源运输任务数据结构
- */
-interface GatherTaskData extends TaskData {
-    totalStore: store
-}
-
-/**
- * 发送任务数据结构
- */
-interface SendTaskData extends TaskData {
-    toRoom: string
-    transactionCost: number
-}
-
-/**
- * Room Memory结构
- */
-interface RoomMemory {
-
-}
-
-/**
- * Creep Memory结构
- */
-interface CreepMemory {
-    role: string
-    groupID: string
-    registered?: number
-    state?: CreepState
-}
-
-type BaseStateConstant = 'reach' | 'upgradeUntilEmpty' | 'harvestUntilFull' | 'transferOnce' | 'withdrawOnce' | 'buildUntilEmpty' | 'withdrawMulti' | 'harvestJustOnTime' //| 'transferMulti' 
-type TaskStateConstant = 'centerTransfer'
-type IdleState = "idle"
-type StateConstant = BaseStateConstant | IdleState
-type StateExport = {
-    [state in StateConstant]?: () => IStateConfig
-}
-
-/**
- * 状态机返回的结果 0 : 结束该状态 1 : 继续该状态 2 : 执行后结束 3 : 执行后继续
- */
-declare enum StateContinue {
-    Exit = 0,
-    Continue = 1,
-}
-
-/**
- * Action Wrapper 封装一下状态机action
- */
-type StateActionWrapper = {
-    [actionName in ActionConstant]?: (creep: Creep | PowerCreep) => StateContinue
-}
-
-/**
- * State Machine 需要提供的方法 onEnter 进入状态好时调用， 
- */
-interface IStateConfig {
-    onEnter(creep: Creep | PowerCreep, data: StateData): void
-    actions: StateActionWrapper
-    onExit(creep: Creep | PowerCreep): void
-}
-
-/**
- * Creep 状态信息 序列化后的信息，挂载于Memory
- */
-interface CreepState {
-    currentState: StateConstant
-    data: {
-        [stateName: string]: StateMemoryData
-    }
-}
-
-interface Pos {
-    x: number
-    y: number
-    roomName: string
-}
-
-interface Coor {
-    x: number
-    y: number
-}
-
-/**
- * Creep 状态机序列化信息的基类
- */
-interface StateMemoryData {
-    targetID?: string
-    sourceID?: string
-    containerID?: string
-    targetPos?: Pos
-    sourcePos?: Pos
-    range?: number
-    controllerID?: string
-    resourceType?: ResourceConstant
-    amount?: number
-    reached?: 0 | 1
-    store: store
-}
-
-/**
- * Creep 状态机初始化信息的基类
- */
-interface StateData {
-    targetPos: RoomPosition | { pos: RoomPosition }
-    range?: number
-}
-
-/**
- * Creep 状态机初始化信息，需包含一种资源
- */
-interface StateDataOneResource extends StateData {
-    resourceType: ResourceConstant,
-    amount: number
-}
-/**
- * Creep 状态机初始化信息，需包含一个资源包
- */
-interface StateDataMultiResources extends StateData {
-    store: store
-}
-
-declare module NodeJS {
-    // 全局对象
-    interface Global {
-        // 是否已经挂载拓展
-        hasExtension?: boolean
-        moment?: MomentCollection
-        spawnTask?: AsyncTaskAction
-        test?: Object
-    }
-}
-
-
-// 内存对象
-interface Memory {
-    lock?: LockCollection
-    group?: GroupCollection
-    spawnTasks?: AsyncTasksMemory
-}
-
-interface Room {
-    work(): void
-    getSpawnQueue(): SpawnConfig[]
-    getTerrainCache(): TerrainCahce
-    spawn: StructureSpawn[]
-    container: StructureContainer[]
-    tower: StructureTower[]
-    link: StructureLink[]
-    extension: StructureExtension[]
-    road: StructureRoad[]
-    wall: StructureWall[]
-    rampart: StructureRampart[]
-    portal: StructurePortal[]
-    lab: StructureLab[]
-    deposit: Deposit[]
-    source: Source[]
-    powerBank: StructurePowerBank[]
-    extractor: StructureExtractor
-    observer: StructureObserver
-    nuker: StructureNuker
-    powerSpawn: StructurePowerSpawn
-    factory: StructureFactory
-    invaderCore: StructureInvaderCore
-    mineral: Mineral
-    my: boolean
-    level: number
-}
-
-interface TerrainCahce {
-    sourcePos?: Coor[]
-    controllerPos?: Coor[]
-    mineralPos?: Coor[]
-    depositPos?: Coor[]
-    powerBankPos?: Coor[]
-    portalPos?: Coor[]
-}
-
-interface PowerCreep {
-    work(): void
-    runState(): string
-    getStateData(stateName: StateConstant): StateMemoryData
-    getCurrentState(): StateConstant
-    getCurrentStateData(): StateMemoryData
-    getMomentStore(resourceType: string): store | number
-    getMomentStoreToWithdraw(resourceType: string): store | number
-    getMomentStoreToTransfer(resourceType: string): number
-}
-/**
- * Moment 相关方法
- * @returns number
- */
-interface Source {
-    getMomentStore(): number
-}
-
-/**
- * Moment 相关方法
- * @returns number
- */
-interface Mineral {
-    getMomentStore(): number
-}
-
-/**
- * Moment 相关方法
- * @returns number
- */
-interface Structure {
-    getMomentStore(resourceType?: string): store | number
-    getMomentStoreToWithdraw(resourceType: string): store | number
-    getMomentStoreToTransfer(resourceType: string): number
-}
-
-interface SpawnAsyncTask extends AsyncTaskBase {
-    config:SpawnConfig
-}
-
-interface SpawnAsyncTaskMemory extends AsyncTaskMemoryBase {
-    config:SpawnConfig
-}
-
-interface StructureSpawn {
-    work(): void
-}
-
-/**
- * Creep 拓展
- */
-interface Creep {
-    work(): void
-    runState(): string
-    getStateData(stateName: StateConstant): StateMemoryData
-    getCurrentStateData(): StateMemoryData
-    getCurrentState(): StateConstant
-    getMomentStore(resourceType?: ResourceConstant): store | number
-    getMomentStoreToWithdraw(resourceType: string): store | number
-    getMomentStoreToTransfer(resourceType: string): number
-    // rewrite actions
-    _attack(target: AnyCreep | Structure): CreepActionReturnCode
-    _attackController(target: StructureController): CreepActionReturnCode
-    _build(target: ConstructionSite): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES | ERR_RCL_NOT_ENOUGH
-    _dismantle(target: Structure): CreepActionReturnCode
-    _drop(resourceType: ResourceConstant, amount?: number): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_ENOUGH_RESOURCES
-    _harvest(target: Source | Mineral | Deposit): CreepActionReturnCode | ERR_NOT_FOUND | ERR_NOT_ENOUGH_RESOURCES
-    _heal(target: AnyCreep): CreepActionReturnCode
-    _move(target: DirectionConstant | Creep): CreepMoveReturnCode | OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NOT_IN_RANGE | ERR_INVALID_ARGS
-    _moveTo(
-        target: RoomPosition | { pos: RoomPosition },
-        opts?: MoveToOpts,
-    ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND
-    _moveByPath(path: PathStep[] | RoomPosition[] | string): CreepMoveReturnCode | ERR_NOT_FOUND | ERR_INVALID_ARGS
-    _pickup(target: Resource): CreepActionReturnCode | ERR_FULL
-    _pull(target: Creep): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_INVALID_TARGET | ERR_NOT_IN_RANGE | ERR_NO_BODYPART
-    _rangedAttack(target: AnyCreep | Structure): CreepActionReturnCode
-    _rangedHeal(target: AnyCreep): CreepActionReturnCode
-    _rangedMassAttack(): OK | ERR_NOT_OWNER | ERR_BUSY | ERR_NO_BODYPART
-    _repair(target: Structure): CreepActionReturnCode | ERR_NOT_ENOUGH_RESOURCES
-    _transfer(target: AnyCreep | Structure, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
-    _upgradeController(target: StructureController): ScreepsReturnCode
-    _withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant, amount?: number): ScreepsReturnCode
-}
+// ============================================================================================
+// 职责相关
 
 type BaseRoleConstant = "primitive" //| "harvester" | "builder" | "hauler" | "distributer"
 
@@ -400,6 +366,9 @@ interface IRoleConfig {
         data: StateData
     }
 }
+
+// ============================================================================================
+// 组相关
 
 type GroupConstant = "primitive" //| "build" | "harvest"
 
@@ -435,10 +404,21 @@ interface IGroupConfig {
     update(): void
 }
 
+// ============================================================================================
+// Spawn 异步任务
+
 interface SpawnConfig {
     body: BodyPartConstant[]
     name: string
     memory: CreepMemory
+}
+
+interface SpawnAsyncTask extends AsyncTaskBase {
+    config:SpawnConfig
+}
+
+interface SpawnAsyncTaskMemory extends AsyncTaskMemoryBase {
+    config:SpawnConfig
 }
 
 /**
@@ -463,7 +443,6 @@ interface AsyncTaskMemoryBase {
 interface AsyncTaskBase {
     id: string
 }
-
 
 /**
  * AsyncTask交互接口
